@@ -47,6 +47,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      elevation: 0,
+      scrolledUnderElevation: 0,
       leading:
           showBack
               ? GestureDetector(
@@ -60,13 +62,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               )
-              : GestureDetector(
-                onTap: ondrawericon,
-                child: SvgPicture.asset(
-                  "assets/images/drawericon.svg",
-                  fit: BoxFit.scaleDown,
-                ),
-              ),
+              : const SizedBox.shrink(),
       backgroundColor: AppColors.backgroundcolour,
       centerTitle: true,
       title:

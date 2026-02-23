@@ -12,7 +12,7 @@ class AppButton extends StatelessWidget {
     this.backgroundColor = AppColors.buttoncolour,
     this.buttonLoader = false,
     this.textColor = Colors.white,
-    this.horizontalMargin = 20,
+    this.horizontalMargin = 0,
     this.texthorizontalMargin = 20,
     this.verticalMargin = 18,
     this.minWidth = 390.0, // Set the minimum width
@@ -54,17 +54,18 @@ class AppButton extends StatelessWidget {
               backgroundColor: backgroundColor,
               shape: RoundedRectangleBorder(
                 side: BorderSide(color: borderColor ?? Colors.transparent),
-                borderRadius: BorderRadius.circular(10.r),
+                borderRadius: BorderRadius.circular(100.r),
               ),
               textStyle: GoogleFonts.inter(
                 color: textColor!,
                 fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
               padding: EdgeInsets.symmetric(vertical: verticalMargin!),
               elevation: 0,
               minimumSize: Size(minWidth == 0 ? 0 : minWidth, 0),
             ),
+
             onPressed: buttonLoader! ? null : onPress,
             child:
                 buttonLoader!

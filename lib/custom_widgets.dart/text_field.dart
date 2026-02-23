@@ -129,12 +129,12 @@ class AppInput extends StatelessWidget {
                       obscureText!
                           ? const Icon(
                             Icons.remove_red_eye_outlined,
-                            color: Color(0xFFCACACA),
+                            color: AppColors.hintstylecolour,
                           )
                           : const Icon(
                             FontAwesomeIcons.eyeSlash,
                             size: 18,
-                            color: Color(0xFFCACACA),
+                            color: AppColors.hintstylecolour,
                           ),
                 ),
               )
