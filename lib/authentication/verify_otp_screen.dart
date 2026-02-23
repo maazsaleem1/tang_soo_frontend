@@ -4,6 +4,8 @@ import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:tang_soo_karate/authentication/reset_password_screen.dart';
+import 'package:tang_soo_karate/authentication/sign_in_screen.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/custom_appbar.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
@@ -91,9 +93,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               AppButton(
                 onPress: () async {
                   if (widget.page == "forgotpassword") {
-                    // Get.to(() => ResetPasswordScreen());
+                    Get.to(() => ResetPasswordScreen());
                   } else {
-                    // Get.to(() => CreateProfileScreen());
+                    Get.to(() => SignInScreen());
                   }
                 },
                 horizontalMargin: 24.w,
