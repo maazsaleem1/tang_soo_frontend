@@ -7,10 +7,12 @@ import 'package:get/get.dart';
 import 'package:tang_soo_karate/authentication/forgot_password_screen.dart';
 import 'package:tang_soo_karate/authentication/signup_screen.dart';
 import 'package:tang_soo_karate/controllers/auth_controllers.dart';
+import 'package:tang_soo_karate/controllers/navbar_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/custom_appbar.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_field.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
+import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 import 'package:tang_soo_karate/res/svgsicon.dart';
 
@@ -23,6 +25,8 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final Logincontroller logincontroller = Get.put(Logincontroller());
+  final navabrcontroller = Get.put(NavBarController());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +35,7 @@ class _SignInScreenState extends State<SignInScreen> {
       backgroundColor: AppColors.backgroundcolour,
       appBar: CustomAppBar(
         title: "Log In",
-        textType: TextType.medium,
+        textType: TextType.font16600,
         showBack: false,
         onPress: () {},
       ),
@@ -41,11 +45,14 @@ class _SignInScreenState extends State<SignInScreen> {
             padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
               children: [
-                styledText(
-                  "Please enter your credentials to login",
-                  TextType.font14400,
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: styledText(
+                    "Please enter your credentials to login",
+                    TextType.font14400,
+                  ),
                 ),
-                55.verticalSpace,
+                20.verticalSpace,
                 AppInput(
                   placeHolder: "Enter your email address",
                   label: "Email Address",
@@ -109,9 +116,19 @@ class _SignInScreenState extends State<SignInScreen> {
                   ],
                 ),
                 24.verticalSpace,
-                AppButton(text: "Login", onPress: () {}),
+                AppButton(
+                  text: "Login",
+                  onPress: () {
+                    Get.offAll(NavBarScreen());
+                    navabrcontroller.itemSelect(0);
+                  },
+                ),
                 24.verticalSpace,
-                styledText("OR", TextType.medium, textAlign: TextAlign.center),
+                styledText(
+                  "OR",
+                  TextType.font16600,
+                  textAlign: TextAlign.center,
+                ),
                 24.verticalSpace,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -145,7 +162,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   onTap: () {
                     Get.to(() => SignupScreen());
                   },
-                  child: styledText("Signup", TextType.medium),
+                  child: styledText("Signup", TextType.font16600),
                 ),
               ],
             ),

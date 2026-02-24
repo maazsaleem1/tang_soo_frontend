@@ -138,7 +138,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   borderRadius: BorderRadius.circular(8.r),
                   color: AppColors.backgroundcolourpie,
                 ),
-                child: Center(child: styledText("Post", TextType.medium)),
+                child: Center(child: styledText("Post", TextType.font16600)),
               ),
             ),
           ),

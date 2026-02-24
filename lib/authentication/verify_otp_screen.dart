@@ -6,9 +6,12 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tang_soo_karate/authentication/reset_password_screen.dart';
 import 'package:tang_soo_karate/authentication/sign_in_screen.dart';
+import 'package:tang_soo_karate/controllers/navbar_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/custom_appbar.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
+import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
+import 'package:tang_soo_karate/on_boarding_screens.dart/introduction_video_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class VerifyOtpScreen extends StatefulWidget {
 }
 
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
+  final navabrcontroller = Get.put(NavBarController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +32,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
       backgroundColor: AppColors.backgroundcolour,
       appBar: CustomAppBar(
         title: "OTP",
-        textType: TextType.medium,
+        textType: TextType.font16600,
         showBack: true,
         onPress: () {
           Get.close(1);
@@ -95,7 +99,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                   if (widget.page == "forgotpassword") {
                     Get.to(() => ResetPasswordScreen());
                   } else {
-                    Get.to(() => SignInScreen());
+                    Get.off(() => IntroductionScreen());
+                    // Get.offAll(NavBarScreen());
+                    // navabrcontroller.itemSelect(0);
                   }
                 },
                 horizontalMargin: 24.w,
@@ -144,7 +150,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               children: [
                 styledText("Didn't Receive Code?", TextType.font14400),
                 3.horizontalSpace,
-                styledText("Resend Code", TextType.medium),
+                styledText("Resend Code", TextType.font16600),
               ],
             ),
           ),

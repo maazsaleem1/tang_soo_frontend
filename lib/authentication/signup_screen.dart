@@ -31,7 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
       backgroundColor: AppColors.backgroundcolour,
       appBar: CustomAppBar(
         title: "Sign Up",
-        textType: TextType.medium,
+        textType: TextType.font16600,
         showBack: true,
         onPress: () {
           Get.off(() => SignInScreen());
@@ -92,7 +92,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   10.verticalSpace,
                   styledText(
                     "OR",
-                    TextType.medium,
+                    TextType.font16600,
                     textAlign: TextAlign.center,
                   ),
                   10.verticalSpace,
@@ -125,7 +125,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         onTap: () {
                           Get.off(() => SignInScreen());
                         },
-                        child: styledText("Sign In", TextType.medium),
+                        child: styledText("Sign In", TextType.font16600),
                       ),
                     ],
                   ),

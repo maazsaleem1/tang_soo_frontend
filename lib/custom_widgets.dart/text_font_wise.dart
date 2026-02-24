@@ -5,10 +5,10 @@ import 'package:tang_soo_karate/res/app_colours.dart';
 enum TextType {
   xlarge,
   large,
-  medium,
-  minimediumhard,
+  font16600,
+  minifont16600hard,
   font14400,
-  small,
+  font14500,
   minismall,
   font18,
   font15500,
@@ -18,6 +18,8 @@ enum TextType {
   font10,
   font16500,
   font12700,
+  font14600,
+  font20700,
 }
 
 Text styledText(
@@ -33,6 +35,10 @@ Text styledText(
     case TextType.xlarge:
       fontSize = 24;
       fontWeight = FontWeight.w600;
+      break;
+    case TextType.font20700:
+      fontSize = 20;
+      fontWeight = FontWeight.w700;
       break;
     case TextType.large:
       fontSize = 17;
@@ -54,11 +60,11 @@ Text styledText(
       fontSize = 16;
       fontWeight = FontWeight.w500;
       break;
-    case TextType.medium:
+    case TextType.font16600:
       fontSize = 16;
       fontWeight = FontWeight.w600;
       break;
-    case TextType.minimediumhard:
+    case TextType.minifont16600hard:
       fontSize = 14;
       fontWeight = FontWeight.w700;
       break;
@@ -66,9 +72,13 @@ Text styledText(
       fontSize = 14;
       fontWeight = FontWeight.w400;
       break;
-    case TextType.small:
+    case TextType.font14500:
       fontSize = 14;
       fontWeight = FontWeight.w500;
+      break;
+    case TextType.font14600:
+      fontSize = 14;
+      fontWeight = FontWeight.w600;
       break;
     case TextType.font14300:
       fontSize = 14;

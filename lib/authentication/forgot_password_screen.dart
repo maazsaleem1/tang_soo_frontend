@@ -24,7 +24,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       backgroundColor: AppColors.backgroundcolour,
       appBar: CustomAppBar(
         title: "Forgot Password",
-        textType: TextType.medium,
+        textType: TextType.font16600,
         showBack: true,
         onPress: () {
           Get.close(1);

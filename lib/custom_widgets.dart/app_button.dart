@@ -70,31 +70,22 @@ class AppButton extends StatelessWidget {
             child:
                 buttonLoader!
                     ? SpinKitFadingCircle(
-                      color: loadercolour, // Replace with your desired color
-                      size: loadersize, // Adjust size as needed
+                      color: loadercolour, 
+                      size: loadersize, 
                     )
                     : Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: texthorizontalMargin!,
                       ),
                       child: SizedBox(
-                        // width: widthifyouneedthebuttontextinstart!.w,
-                        // width: minWidth,
+                       
                         child: styledText(
                           text,
                           TextType.font16500,
                           color: textColor!,
                         ),
 
-                        //  Text(
-                        //   textAlign: textalignment,
-                        //   text,
-                        //   style: interFont(
-                        //     color: textColor,
-                        //     fontsize: fontsize,
-                        //     fontweight: fontweight,
-                        //   ),
-                        // ),
+                       
                       ),
                     ),
           );
