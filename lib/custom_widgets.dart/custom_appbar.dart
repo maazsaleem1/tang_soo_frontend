@@ -100,7 +100,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       style: TextStyle(color: Colors.white, fontSize: 10),
                     ),
                     position: badges.BadgePosition.topEnd(top: -5, end: 0),
-                    child: SvgPicture.asset(actionImage!),
+                    child: Container(
+                      width: 26.w,
+                      height: 26.w,
+                      decoration: const BoxDecoration(
+                        color: AppColors.buttoncolour,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.notifications,
+                        size: 15.sp,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ],

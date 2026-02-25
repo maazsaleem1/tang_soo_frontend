@@ -81,7 +81,64 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       child:
           _isInitialized && _chewieController != null
               ? widget.showControls
-                  ? Chewie(controller: _chewieController!)
+                  ? (widget.fit == BoxFit.cover
+                      ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          final videoAspect =
+                              _videoController.value.aspectRatio;
+                          final boxAspect =
+                              constraints.maxWidth / constraints.maxHeight;
+                          final scale =
+                              videoAspect > boxAspect
+                                  ? videoAspect / boxAspect
+                                  : boxAspect / videoAspect;
+
+                          return Stack(
+                            children: [
+                              ClipRect(
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: OverflowBox(
+                                    maxWidth: constraints.maxWidth * scale,
+                                    maxHeight: constraints.maxHeight * scale,
+                                    child: SizedBox(
+                                      width: constraints.maxWidth * scale,
+                                      height: constraints.maxHeight * scale,
+                                      child: Chewie(
+                                        controller: _chewieController!,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (widget.allowFullScreen)
+                                Positioned(
+                                  right: 8,
+                                  bottom: 8,
+                                  child: Material(
+                                    color: Colors.black45,
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(20),
+                                      onTap: () {
+                                        _chewieController?.enterFullScreen();
+                                      },
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.fullscreen,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      )
+                      : Chewie(controller: _chewieController!))
                   : LayoutBuilder(
                     builder: (context, constraints) {
                       final videoSize = _videoController.value.size;

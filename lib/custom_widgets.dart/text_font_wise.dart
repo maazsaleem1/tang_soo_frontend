@@ -6,6 +6,7 @@ enum TextType {
   xlarge,
   large,
   font16600,
+  font16700,
   minifont16600hard,
   font14400,
   font14500,
@@ -30,6 +31,8 @@ Text styledText(
   TextOverflow? overflow,
   FontWeight? fontWeight,
   double? fontSize,
+  TextDecoration? textDecoration,
+  Color? textDecorationColor,
 }) {
   switch (type) {
     case TextType.xlarge:
@@ -61,6 +64,10 @@ Text styledText(
       fontWeight = FontWeight.w500;
       break;
     case TextType.font16600:
+      fontSize = 16;
+      fontWeight = FontWeight.w600;
+      break;
+    case TextType.font16700:
       fontSize = 16;
       fontWeight = FontWeight.w600;
       break;
@@ -106,7 +113,8 @@ Text styledText(
     fontSize: fontSize,
     fontWeight: fontWeight,
     color: color,
-    decoration: TextDecoration.none,
+    decoration: textDecoration ?? TextDecoration.none,
+    decorationColor: textDecorationColor ?? Colors.transparent,
   );
 
   return Text(text, style: textStyle, textAlign: textAlign, overflow: overflow);

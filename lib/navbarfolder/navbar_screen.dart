@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:badges/badges.dart' as badges;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:tang_soo_karate/controllers/navbar_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
 import 'package:tang_soo_karate/homescreenfolder/home_screen.dart';
+import 'package:tang_soo_karate/notificationfolder/notification_screen.dart';
 import 'package:tang_soo_karate/profile_setting_folder/profile_Setting.dart';
 import 'package:tang_soo_karate/progressfolder/progress_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
@@ -52,7 +54,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
     String title;
     switch (index) {
       case 0:
-        title = 'Home';
+        title = 'Welcome john';
         break;
       case 1:
         title = 'Progress';
@@ -71,13 +73,13 @@ class _NavBarScreenState extends State<NavBarScreen> {
       surfaceTintColor: AppColors.backgroundcolour,
       elevation: 0,
       backgroundColor: AppColors.backgroundcolour,
-      leading: GestureDetector(
-        onTap: () => _key.currentState!.openDrawer(),
-        child: Padding(
-          padding: EdgeInsets.only(left: 15.w),
-          child: SvgPicture.asset("assets/images/drawericon.svg", height: 40),
-        ),
-      ),
+      // leading: GestureDetector(
+      //   onTap: () => _key.currentState!.openDrawer(),
+      //   child: Padding(
+      //     padding: EdgeInsets.only(left: 15.w),
+      //     child: SvgPicture.asset("assets/images/drawericon.svg", height: 40),
+      //   ),
+      // ),
       title: styledText(title, TextType.font18),
 
       // Text(
@@ -90,33 +92,30 @@ class _NavBarScreenState extends State<NavBarScreen> {
       // ),
       centerTitle: true,
       actions: [
-        // Padding(
-        //   padding: EdgeInsets.only(right: 15.w),
-        //   child: Row(
-        //     children: [
-        //       GestureDetector(
-        //         onTap: () {
-        //           Get.to(() => const NotificationScreen());
-        //         },
-        //         child: Obx(
-        //           () => badges.Badge(
-        //             showBadge:
-        //                 notificationScreenController.unreadCount.value > 0,
-        //             badgeContent: Text(
-        //               "${notificationScreenController.unreadCount.value}",
-        //               style: const TextStyle(color: Colors.white, fontSize: 10),
-        //             ),
-        //             position: badges.BadgePosition.topEnd(top: -5, end: 0),
-        //             child: SvgPicture.asset(
-        //               "assets/images/notificationicon.svg",
-        //               height: 35.h,
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
+        Padding(
+          padding: EdgeInsets.only(right: 15.w),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Get.to(() => const NotificationScreen());
+                },
+                child: badges.Badge(
+                  showBadge: true,
+                  badgeContent: Text(
+                    "3",
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                  position: badges.BadgePosition.topEnd(top: -8, end: 0),
+                  child: SvgPicture.asset(
+                    "assets/images/notificationicon.svg",
+                    height: 25.h,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

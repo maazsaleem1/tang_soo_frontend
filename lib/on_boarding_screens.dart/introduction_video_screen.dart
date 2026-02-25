@@ -8,6 +8,7 @@ import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/customize_video_player.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
 import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
+import 'package:tang_soo_karate/on_boarding_screens.dart/training_journey_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
 class IntroductionScreen extends StatefulWidget {
@@ -41,6 +42,7 @@ class _IntroductionScreenState extends State<IntroductionScreen> {
   void _goToHome() {
     navBarController.itemSelect(0);
     Get.offAll(() => const NavBarScreen());
+    // Get.off(() => const TrainingJourneyScreen());
   }
 
   @override
