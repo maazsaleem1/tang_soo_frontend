@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:tang_soo_karate/authentication/sign_in_screen.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 
@@ -42,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
           left: 0,
           child: AppButton(
             onPress: () {
-              Get.to(SignInScreen());
+              Get.to(() => const SignInScreen());
             },
             text: "Get Started",
             backgroundColor: Color(0xff38B26E),

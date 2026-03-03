@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get_navigation/get_navigation.dart';
+import 'package:get/get.dart';
 import 'package:tang_soo_karate/on_boarding_screens.dart/splash_screens.dart';
+import 'package:tang_soo_karate/res/app_colours.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,8 +31,18 @@ class MyApp extends StatelessWidget {
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
-        theme: ThemeData(),
-        home: SplashScreen(),
+        defaultTransition: Transition.fadeIn,
+        transitionDuration: const Duration(milliseconds: 180),
+        theme: ThemeData(
+          scaffoldBackgroundColor: AppColors.backgroundcolour,
+          canvasColor: AppColors.backgroundcolour,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: AppColors.backgroundcolour,
+            surfaceTintColor: AppColors.backgroundcolour,
+            elevation: 0,
+          ),
+        ),
+        home: const SplashScreen(),
       ),
     );
   }

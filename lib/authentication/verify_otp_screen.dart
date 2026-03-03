@@ -4,11 +4,10 @@ import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:tang_soo_karate/authentication/reset_password_screen.dart';
+import 'package:tang_soo_karate/controllers/auth_controllers.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/custom_appbar.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
-import 'package:tang_soo_karate/on_boarding_screens.dart/training_journey_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -20,6 +19,18 @@ class VerifyOtpScreen extends StatefulWidget {
 }
 
 class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
+  late final AuthController authController;
+  String _enteredOtp = '';
+
+  @override
+  void initState() {
+    super.initState();
+    authController =
+        Get.isRegistered<AuthController>()
+            ? Get.find<AuthController>()
+            : Get.put(AuthController(), permanent: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,25 +97,27 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 ),
                 showFieldAsBox: true,
 
-                onSubmit: (value) {},
+                onSubmit: (value) {
+                  _enteredOtp = value;
+                },
               ),
 
               24.verticalSpace,
-              AppButton(
-                onPress: () async {
-                  if (widget.page == "forgotpassword") {
-                    Get.to(() => ResetPasswordScreen());
-                  } else {
-                    Get.off(() => const TrainingJourneyScreen());
-                    // Get.off(() => const IntroductionScreen());
-                    // Get.offAll(NavBarScreen());
-                    // navabrcontroller.itemSelect(0);
-                  }
-                },
-                horizontalMargin: 24.w,
-                text: "Verify",
-                backgroundColor: AppColors.buttoncolour,
-              ),
+              Obx(() {
+                return AppButton(
+                  onPress: () async {
+                    if (widget.page == "forgotpassword") {
+                      await authController.verifyForgotPasswordOtp(_enteredOtp);
+                    } else {
+                      await authController.verifySignupOtp(_enteredOtp);
+                    }
+                  },
+                  horizontalMargin: 24.w,
+                  text: "Verify",
+                  buttonLoader: authController.isVerifyOtpLoading.value,
+                  backgroundColor: AppColors.buttoncolour,
+                );
+              }),
 
               90.verticalSpace,
               Center(
@@ -147,7 +160,20 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               children: [
                 styledText("Didn't Receive Code?", TextType.font14400),
                 3.horizontalSpace,
-                styledText("Resend Code", TextType.font16600),
+                Obx(() {
+                  return GestureDetector(
+                    onTap:
+                        authController.isResendOtpLoading.value
+                            ? null
+                            : authController.resendOtp,
+                    child: styledText(
+                      authController.isResendOtpLoading.value
+                          ? "Resending..."
+                          : "Resend Code",
+                      TextType.font16600,
+                    ),
+                  );
+                }),
               ],
             ),
           ),

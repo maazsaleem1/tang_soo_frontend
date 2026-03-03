@@ -15,11 +15,12 @@ class AppButton extends StatelessWidget {
     this.horizontalMargin = 0,
     this.texthorizontalMargin = 20,
     this.verticalMargin = 18,
+    this.height = 52,
     this.minWidth = 390.0, // Set the minimum width
     this.borderColor,
     super.key,
     this.fontsize = 16,
-    this.loadersize = 30.0,
+    this.loadersize = 20.0,
     this.textalignment = TextAlign.center,
     this.fontweight = FontWeight.w600,
     this.loadercolour = Colors.white,
@@ -36,6 +37,7 @@ class AppButton extends StatelessWidget {
   final double? widthifyouneedthebuttontextinstart;
   final double? texthorizontalMargin;
   final double? verticalMargin;
+  final double height;
   final double minWidth; // Minimum width property
   final Color? borderColor;
   final int fontsize;
@@ -52,6 +54,8 @@ class AppButton extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               disabledBackgroundColor: backgroundColor,
               backgroundColor: backgroundColor,
+              disabledForegroundColor: textColor,
+              foregroundColor: textColor,
               shape: RoundedRectangleBorder(
                 side: BorderSide(color: borderColor ?? Colors.transparent),
                 borderRadius: BorderRadius.circular(100.r),
@@ -61,33 +65,38 @@ class AppButton extends StatelessWidget {
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w500,
               ),
-              padding: EdgeInsets.symmetric(vertical: verticalMargin!),
+              padding: EdgeInsets.zero,
               elevation: 0,
-              minimumSize: Size(minWidth == 0 ? 0 : minWidth, 0),
+              minimumSize: Size(minWidth == 0 ? 0 : minWidth, height),
+              maximumSize: Size(double.infinity, height),
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
             ),
 
             onPressed: buttonLoader! ? null : onPress,
-            child:
-                buttonLoader!
-                    ? SpinKitFadingCircle(
-                      color: loadercolour, 
-                      size: loadersize, 
-                    )
-                    : Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: texthorizontalMargin!,
-                      ),
-                      child: SizedBox(
-                       
-                        child: styledText(
-                          text,
-                          TextType.font16500,
-                          color: textColor!,
+            child: SizedBox(
+              height: height,
+              child: Center(
+                child:
+                    buttonLoader!
+                        ? SpinKitFadingCircle(
+                          color: loadercolour,
+                          size: loadersize,
+                        )
+                        : Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: texthorizontalMargin!,
+                          ),
+                          child: styledText(
+                            text,
+                            TextType.font16500,
+                            color: textColor!,
+                          ),
                         ),
-
-                       
-                      ),
-                    ),
+              ),
+            ),
           );
         },
       ),
