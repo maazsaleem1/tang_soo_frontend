@@ -1,6 +1,6 @@
 {
-    "name": "tang_soo_karate",
-    "short_name": "tang_soo_karate",
+    "name": "TangSooKarate",
+    "short_name": "TangSooKarate",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

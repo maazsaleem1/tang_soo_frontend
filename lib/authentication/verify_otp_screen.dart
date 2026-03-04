@@ -22,6 +22,20 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
   late final AuthController authController;
   String _enteredOtp = '';
 
+  Future<void> _submitOtp(String otp) async {
+    if (authController.isVerifyOtpLoading.value) return;
+
+    final value = otp.trim();
+    if (value.length != 6) return;
+
+    _enteredOtp = value;
+    if (widget.page == "forgotpassword") {
+      await authController.verifyForgotPasswordOtp(_enteredOtp);
+    } else {
+      await authController.verifySignupOtp(_enteredOtp);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -98,20 +112,14 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                 showFieldAsBox: true,
 
                 onSubmit: (value) {
-                  _enteredOtp = value;
+                  _submitOtp(value);
                 },
               ),
 
               24.verticalSpace,
               Obx(() {
                 return AppButton(
-                  onPress: () async {
-                    if (widget.page == "forgotpassword") {
-                      await authController.verifyForgotPasswordOtp(_enteredOtp);
-                    } else {
-                      await authController.verifySignupOtp(_enteredOtp);
-                    }
-                  },
+                  onPress: () async => _submitOtp(_enteredOtp),
                   horizontalMargin: 24.w,
                   text: "Verify",
                   buttonLoader: authController.isVerifyOtpLoading.value,

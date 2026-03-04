@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "tang_soo_karate" "\0"
+            VALUE "FileDescription", "TangSooKarate" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "tang_soo_karate" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "tang_soo_karate.exe" "\0"
-            VALUE "ProductName", "tang_soo_karate" "\0"
+            VALUE "ProductName", "TangSooKarate" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

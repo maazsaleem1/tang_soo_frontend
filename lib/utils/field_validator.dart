@@ -23,12 +23,17 @@ String? validate(String value, String type, {String? password}) {
 }
 
 String? validatePassword(String value) {
+  final hasUppercase = RegExp(r'[A-Z]').hasMatch(value);
+  final hasLowercase = RegExp(r'[a-z]').hasMatch(value);
+
   if (value.isEmpty) {
     return 'Password is required';
   } else if (value.length < 8) {
     return 'Password must contain at least 8 characters';
   } else if (value.length > 20) {
     return 'Password length should be less than 20';
+  } else if (!hasUppercase || !hasLowercase) {
+    return 'Password must include uppercase and lowercase letters';
   }
   return null;
 }
