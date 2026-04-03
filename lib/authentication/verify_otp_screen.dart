@@ -29,10 +29,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     if (value.length != 6) return;
 
     _enteredOtp = value;
-    if (widget.page == "forgotpassword") {
+    if (widget.page == 'forgotpassword') {
       await authController.verifyForgotPasswordOtp(_enteredOtp);
+    } else if (widget.page == 'login') {
+      await authController.verifyLoginOtp(_enteredOtp);
     } else {
-      await authController.verifySignupOtp(_enteredOtp);
+      await authController.verifyCreateAccountOtp(_enteredOtp);
     }
   }
 

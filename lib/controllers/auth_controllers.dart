@@ -1,11 +1,13 @@
+import 'dart:io';
+
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:tang_soo_karate/authentication/create_profile_screen.dart';
 import 'package:tang_soo_karate/authentication/sign_in_screen.dart';
 import 'package:tang_soo_karate/authentication/reset_password_screen.dart';
 import 'package:tang_soo_karate/authentication/verify_otp_screen.dart';
 import 'package:tang_soo_karate/models/user_model.dart';
 import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
-import 'package:tang_soo_karate/on_boarding_screens.dart/training_journey_screen.dart';
 import 'package:tang_soo_karate/services/api/api_storage.dart';
 import 'package:tang_soo_karate/services/auth/auth_service.dart';
 import 'package:tang_soo_karate/utils/field_validator.dart';
@@ -110,7 +112,6 @@ class AuthController extends GetxController {
 
       if (response['success'] == true) {
         await loadStoredUser();
-        clearSignupFields();
         Get.to(() => const VerifyOtpScreen(page: 'createaccount'));
       }
     } finally {
@@ -145,18 +146,50 @@ class AuthController extends GetxController {
           return;
         }
 
-        if (!Get.isRegistered<NavBarController>()) {
-          Get.put(NavBarController());
-        }
-        if (!rememberMe.value) {
-          clearLoginFields();
-        }
-        Get.find<NavBarController>().itemSelect(0);
-        Get.offAll(() => NavBarScreen());
+        _routeAfterVerifiedSession();
       }
     } finally {
       isLoginLoading.value = false;
     }
+  }
+
+  /// After login or login OTP when the account is verified: home or create profile.
+  void _routeAfterVerifiedSession() {
+    if (!rememberMe.value) {
+      clearLoginFields();
+    }
+
+    if (currentUser.value?.isCreated == false) {
+      Get.offAll(() => const CreateProfileScreen());
+      return;
+    }
+
+    if (!Get.isRegistered<NavBarController>()) {
+      Get.put(NavBarController());
+    }
+    Get.find<NavBarController>().itemSelect(0);
+    Get.offAll(() => NavBarScreen());
+  }
+
+  Future<void> logout() async {
+    await ApiStorage.clearAuth();
+    currentUser.value = null;
+    if (Get.isRegistered<NavBarController>()) {
+      Get.delete<NavBarController>(force: true);
+    }
+    Get.offAll(() => const SignInScreen());
+  }
+
+  /// Clears auth and returns to sign-in (e.g. user abandons create profile).
+  Future<void> abandonCreateProfileAndSignOut() async {
+    await ApiStorage.clearAuth();
+    clearSignupFields();
+    clearLoginFields();
+    currentUser.value = null;
+    if (Get.isRegistered<NavBarController>()) {
+      Get.delete<NavBarController>(force: true);
+    }
+    Get.offAll(() => const SignInScreen());
   }
 
   void clearLoginFields() {
@@ -197,10 +230,21 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> verifySignupOtp(String otp) async {
+  /// After signup OTP — create profile, then introduction.
+  Future<void> verifyCreateAccountOtp(String otp) async {
     final isSuccess = await _verifyOtpRequest(otp);
     if (isSuccess) {
-      Get.offAll(() => const TrainingJourneyScreen());
+      await loadStoredUser();
+      Get.off(() => const CreateProfileScreen());
+    }
+  }
+
+  /// After login when email is not yet verified.
+  Future<void> verifyLoginOtp(String otp) async {
+    final isSuccess = await _verifyOtpRequest(otp);
+    if (isSuccess) {
+      await loadStoredUser();
+      _routeAfterVerifiedSession();
     }
   }
 
@@ -249,6 +293,62 @@ class AuthController extends GetxController {
 
   Future<void> loadStoredUser() async {
     currentUser.value = await ApiStorage.getUser();
+  }
+
+  /// Submits create-profile form; persists user + token from API [data].
+  Future<bool> submitCreateProfile({
+    required String fullName,
+    required DateTime birthDate,
+    required String mobile,
+    required String street,
+    required String city,
+    required String country,
+    required String zip,
+    File? profileImage,
+  }) async {
+    final trimmed = fullName.trim();
+    final parts = trimmed.split(RegExp(r'\s+'));
+    final firstName = parts.isNotEmpty ? parts.first : '';
+    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
+    final dob =
+        '${birthDate.year}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}';
+
+    final address = [
+      if (street.trim().isNotEmpty) street.trim(),
+      if (city.trim().isNotEmpty) city.trim(),
+    ].join(', ');
+
+    final response = await _authService.updateProfile(
+      firstName: firstName,
+      lastName: lastName,
+      dob: dob,
+      country: country.trim(),
+      postalCode: zip.trim(),
+      address: address,
+      mobile: mobile.trim(),
+      notificationStatus: 'No',
+      context: Get.context,
+      profileImage: profileImage,
+    );
+
+    final map = Map<String, dynamic>.from(response);
+    final ok = _isTruthySuccess(map['success']);
+    if (ok) {
+      await loadStoredUser();
+      return true;
+    }
+    return false;
+  }
+
+  static bool _isTruthySuccess(dynamic value) {
+    if (value == true) return true;
+    if (value == 1) return true;
+    if (value is String) {
+      final s = value.toLowerCase();
+      return s == 'true' || s == '1';
+    }
+    return false;
   }
 
   Future<void> resetPassword() async {

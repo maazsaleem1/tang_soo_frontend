@@ -24,9 +24,18 @@ class AuthService {
     final sourceUser = nestedUser ?? data;
     if (sourceUser.isEmpty) return;
 
+    final existingToken = await ApiStorage.getToken();
+    final userToken = sourceUser['token']?.toString();
+    final mergedToken =
+        (token != null && token.isNotEmpty)
+            ? token
+            : (userToken != null && userToken.isNotEmpty)
+                ? userToken
+                : (existingToken ?? '');
+
     final normalizedUser = <String, dynamic>{
       ...sourceUser,
-      'token': token ?? sourceUser['token'],
+      'token': mergedToken,
       'status':
           sourceUser['status'] ??
           ((sourceUser['isActive'] == true) ? 'active' : 'inactive'),
@@ -139,5 +148,48 @@ class AuthService {
       body: {'oldPassword': oldPassword, 'newPassword': newPassword},
     );
     return (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+  }
+
+  /// PATCH `/users/profile` — form fields + optional `profileImage` file.
+  Future<Map<String, dynamic>> updateProfile({
+    required String firstName,
+    required String lastName,
+    required String dob,
+    required String country,
+    required String postalCode,
+    required String address,
+    required String mobile,
+    String notificationStatus = 'No',
+    BuildContext? context,
+    File? profileImage,
+  }) async {
+    final fields = <String, String>{
+      'firstName': firstName,
+      'lastName': lastName,
+      'dob': dob,
+      'country': country,
+      'postalCode': postalCode,
+      'address': address,
+      'mobile': mobile,
+      'notificationStatus': notificationStatus,
+    };
+
+    final Map<String, String>? files =
+        profileImage != null ? {'profileImage': profileImage.path} : null;
+
+    final response = await _apiService.patchMultiPartApi(
+      url: ApiConfig.url(ApiConfig.updateProfile),
+      context: context,
+      data: fields,
+      singleFiles: files,
+    );
+
+    final parsed =
+        (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+    if (parsed['success'] == true) {
+      final data = (parsed['data'] as Map?)?.cast<String, dynamic>();
+      await _persistAuthData(data);
+    }
+    return parsed;
   }
 }

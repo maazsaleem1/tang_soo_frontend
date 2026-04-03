@@ -7,9 +7,7 @@ class AppSuccessToast {
   final String title;
 
   void showToast(BuildContext? context) {
-    final target = context ?? Get.context;
-    if (target == null) return;
-
+    // Do not require BuildContext — after await, Get.context is often null; Get.snackbar uses overlay.
     Get.snackbar(
       'Success',
       title,
@@ -28,9 +26,6 @@ class AppErrorToast {
   final String title;
 
   void showToast(BuildContext? context) {
-    final target = context ?? Get.context;
-    if (target == null) return;
-
     Get.snackbar(
       'Error',
       title,

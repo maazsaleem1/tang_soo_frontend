@@ -51,7 +51,7 @@ class HelpSupportScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  width: 120.w,
+                  width: 100.w,
                   child: styledText(
                     "Support Email:",
                     TextType.font14400,
@@ -71,7 +71,7 @@ class HelpSupportScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  width: 120.w,
+                  width: 100.w,
                   child: styledText(
                     "Address:",
                     TextType.font14400,

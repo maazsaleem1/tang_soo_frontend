@@ -33,89 +33,100 @@ Text styledText(
   double? fontSize,
   TextDecoration? textDecoration,
   Color? textDecorationColor,
+  int? maxLines,
 }) {
+  late double resolvedFontSize;
+  late FontWeight resolvedFontWeight;
   switch (type) {
     case TextType.xlarge:
-      fontSize = 24;
-      fontWeight = FontWeight.w600;
+      resolvedFontSize = 24;
+      resolvedFontWeight = FontWeight.w600;
       break;
     case TextType.font20700:
-      fontSize = 20;
-      fontWeight = FontWeight.w700;
+      resolvedFontSize = 20;
+      resolvedFontWeight = FontWeight.w700;
       break;
     case TextType.large:
-      fontSize = 17;
-      fontWeight = FontWeight.w500;
+      resolvedFontSize = 17;
+      resolvedFontWeight = FontWeight.w500;
       break;
     case TextType.font18:
-      fontSize = 18;
-      fontWeight = FontWeight.w600;
+      resolvedFontSize = 18;
+      resolvedFontWeight = FontWeight.w600;
       break;
     case TextType.font15500:
-      fontSize = 15;
-      fontWeight = FontWeight.w500;
+      resolvedFontSize = 15;
+      resolvedFontWeight = FontWeight.w500;
       break;
     case TextType.font16400:
-      fontSize = 16;
-      fontWeight = FontWeight.w400;
+      resolvedFontSize = 16;
+      resolvedFontWeight = FontWeight.w400;
       break;
     case TextType.font16500:
-      fontSize = 16;
-      fontWeight = FontWeight.w500;
+      resolvedFontSize = 16;
+      resolvedFontWeight = FontWeight.w500;
       break;
     case TextType.font16600:
-      fontSize = 16;
-      fontWeight = FontWeight.w600;
+      resolvedFontSize = 16;
+      resolvedFontWeight = FontWeight.w600;
       break;
     case TextType.font16700:
-      fontSize = 16;
-      fontWeight = FontWeight.w600;
+      resolvedFontSize = 16;
+      resolvedFontWeight = FontWeight.w600;
       break;
     case TextType.minifont16600hard:
-      fontSize = 14;
-      fontWeight = FontWeight.w700;
+      resolvedFontSize = 14;
+      resolvedFontWeight = FontWeight.w700;
       break;
     case TextType.font14400:
-      fontSize = 14;
-      fontWeight = FontWeight.w400;
+      resolvedFontSize = 14;
+      resolvedFontWeight = FontWeight.w400;
       break;
     case TextType.font14500:
-      fontSize = 14;
-      fontWeight = FontWeight.w500;
+      resolvedFontSize = 14;
+      resolvedFontWeight = FontWeight.w500;
       break;
     case TextType.font14600:
-      fontSize = 14;
-      fontWeight = FontWeight.w600;
+      resolvedFontSize = 14;
+      resolvedFontWeight = FontWeight.w600;
       break;
     case TextType.font14300:
-      fontSize = 14;
-      fontWeight = FontWeight.w300;
+      resolvedFontSize = 14;
+      resolvedFontWeight = FontWeight.w300;
       break;
     case TextType.minismall:
-      fontSize = 12;
-      fontWeight = FontWeight.w500;
+      resolvedFontSize = 12;
+      resolvedFontWeight = FontWeight.w500;
       break;
     case TextType.font12400:
-      fontSize = 12;
-      fontWeight = FontWeight.w400;
+      resolvedFontSize = 12;
+      resolvedFontWeight = FontWeight.w400;
       break;
     case TextType.font12700:
-      fontSize = 12;
-      fontWeight = FontWeight.w700;
+      resolvedFontSize = 12;
+      resolvedFontWeight = FontWeight.w700;
       break;
     case TextType.font10:
-      fontSize = 10;
-      fontWeight = FontWeight.w400;
+      resolvedFontSize = 10;
+      resolvedFontWeight = FontWeight.w400;
       break;
   }
+  if (fontSize != null) resolvedFontSize = fontSize;
+  if (fontWeight != null) resolvedFontWeight = fontWeight;
 
   final textStyle = GoogleFonts.inter(
-    fontSize: fontSize,
-    fontWeight: fontWeight,
+    fontSize: resolvedFontSize,
+    fontWeight: resolvedFontWeight,
     color: color,
     decoration: textDecoration ?? TextDecoration.none,
     decorationColor: textDecorationColor ?? Colors.transparent,
   );
 
-  return Text(text, style: textStyle, textAlign: textAlign, overflow: overflow);
+  return Text(
+    text,
+    style: textStyle,
+    textAlign: textAlign,
+    overflow: overflow,
+    maxLines: maxLines,
+  );
 }

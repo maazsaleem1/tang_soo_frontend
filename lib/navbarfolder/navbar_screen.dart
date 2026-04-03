@@ -14,7 +14,15 @@ import 'package:tang_soo_karate/trainingfolder/trainingscreen.dart';
 
 class NavBarScreen extends StatefulWidget {
   final int initialIndex;
-  const NavBarScreen({super.key, this.initialIndex = 0});
+
+  /// 0 = All, 1 = Completed, 2 = Bookmarked — applies to [Trainingscreen].
+  final int initialTrainingFilter;
+
+  const NavBarScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.initialTrainingFilter = 0,
+  });
 
   @override
   State<NavBarScreen> createState() => _NavBarScreenState();
@@ -35,7 +43,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
     var screens = [
       HomeScreen(),
       ProgressScreen(),
-      Trainingscreen(),
+      Trainingscreen(initialFilter: widget.initialTrainingFilter),
       Profilescreen(),
     ];
     return Obx(() {

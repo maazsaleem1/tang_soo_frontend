@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:tang_soo_karate/services/api/api_config.dart';
 import 'package:tang_soo_karate/services/api/api_storage.dart';
 import 'package:tang_soo_karate/services/api/api_toast.dart';
@@ -193,11 +194,7 @@ class NetworkApiServices {
       final response =
           body != null
               ? await _client
-                  .put(
-                    Uri.parse(url),
-                    headers: headers,
-                    body: jsonEncode(body),
-                  )
+                  .put(Uri.parse(url), headers: headers, body: jsonEncode(body))
                   .timeout(ApiConfig.connectTimeout)
               : await _client
                   .put(Uri.parse(url), headers: headers)
@@ -368,6 +365,93 @@ class NetworkApiServices {
               : _safeDecode(response.body);
     } catch (e) {
       AppErrorToast(title: e.toString()).showToast(context);
+    }
+
+    return responseJson;
+  }
+
+  /// Picks a safe multipart filename and image [MediaType] (avoids spaces / odd names).
+  static Future<http.MultipartFile> multipartFileFromPathForUpload(
+    String field,
+    String filePath,
+  ) async {
+    final segments = filePath.replaceAll('\\', '/').split('/');
+    var filename = segments.isNotEmpty ? segments.last : 'upload.bin';
+    filename = filename.replaceAll(RegExp(r'\s+'), '_');
+    if (filename.isEmpty) filename = 'upload.jpg';
+
+    final lower = filename.toLowerCase();
+    MediaType? contentType;
+    if (lower.endsWith('.png')) {
+      contentType = MediaType('image', 'png');
+    } else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      contentType = MediaType('image', 'jpeg');
+    } else if (lower.endsWith('.webp')) {
+      contentType = MediaType('image', 'webp');
+    } else if (lower.endsWith('.gif')) {
+      contentType = MediaType('image', 'gif');
+    }
+
+    return http.MultipartFile.fromPath(
+      field,
+      filePath,
+      filename: filename,
+      contentType: contentType,
+    );
+  }
+
+  /// Multipart PATCH (e.g. update profile with optional image).
+  Future<dynamic> patchMultiPartApi({
+    required String url,
+    required Map<String, String> data,
+    BuildContext? context,
+    bool showSnackbar = true,
+    bool sendHeaders = true,
+    Map<String, String>? singleFiles,
+  }) async {
+    dynamic responseJson;
+    final token = await ApiStorage.getToken();
+
+    try {
+      final request = http.MultipartRequest('PATCH', Uri.parse(url));
+      request.fields.addAll(data);
+      request.headers.addAll({
+        'Accept': 'application/json',
+        if (sendHeaders && (token?.isNotEmpty ?? false))
+          'Authorization': 'Bearer $token',
+      });
+
+      if (singleFiles != null) {
+        for (final entry in singleFiles.entries) {
+          if (entry.value.trim().isNotEmpty) {
+            request.files.add(
+              await multipartFileFromPathForUpload(entry.key, entry.value),
+            );
+          }
+        }
+      }
+
+      final streamedResponse = await request.send().timeout(
+        ApiConfig.connectTimeout,
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode >= 500) {
+        log(
+          'patchMultiPartApi ${response.statusCode} $url body: ${response.body}',
+        );
+      }
+
+      responseJson =
+          showSnackbar
+              ? returnResponse(response, context: context)
+              : _safeDecode(response.body);
+    } catch (e) {
+      AppErrorToast(title: e.toString()).showToast(context);
+      responseJson = <String, dynamic>{
+        'success': false,
+        'message': e.toString(),
+      };
     }
 
     return responseJson;

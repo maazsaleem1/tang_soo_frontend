@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:tang_soo_karate/authentication/sign_in_screen.dart';
+import 'package:tang_soo_karate/controllers/auth_controllers.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
+import 'package:tang_soo_karate/models/user_model.dart';
+import 'package:tang_soo_karate/services/api/api_config.dart';
 import 'package:tang_soo_karate/profile_setting_folder/change_password_screen.dart';
+import 'package:tang_soo_karate/profile_setting_folder/edit_profile_screen.dart';
+import 'package:tang_soo_karate/on_boarding_screens.dart/purchase_plan_screen.dart';
+import 'package:tang_soo_karate/profile_setting_folder/payment_history_screen.dart';
+import 'package:tang_soo_karate/profile_setting_folder/unlocked_belts_screen.dart';
 import 'package:tang_soo_karate/profile_setting_folder/help_support_screen.dart';
 import 'package:tang_soo_karate/profile_setting_folder/privacy_policy_screen.dart';
 import 'package:tang_soo_karate/profile_setting_folder/terms_condition_screen.dart';
@@ -21,7 +27,31 @@ class ProfilescreenState extends State<Profilescreen> {
   bool _isNotificationEnabled = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<AuthController>()) {
+        Get.find<AuthController>().loadStoredUser();
+      }
+    });
+  }
+
+  static String _subtitleLine(UserModel? u) {
+    if (u == null) return 'Member';
+    final sub = u.subscriptionStatus.trim();
+    if (sub.isNotEmpty && sub.toLowerCase() != 'null') {
+      return sub;
+    }
+    if (u.role.isNotEmpty) return u.role;
+    return 'Member';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final auth = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>()
+        : Get.put(AuthController(), permanent: true);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundcolour,
       body: SafeArea(
@@ -29,66 +59,125 @@ class ProfilescreenState extends State<Profilescreen> {
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 58.w,
-                    height: 58.w,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEDEDED),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        "assets/images/profile_avatar.svg",
-                        width: 30.w,
-                        height: 30.w,
+              Obx(() {
+                final u = auth.currentUser.value;
+                final name =
+                    (u?.fullName.trim().isNotEmpty ?? false)
+                        ? u!.fullName.trim()
+                        : 'User';
+                final avatarUrl = ApiConfig.absoluteMediaUrl(u?.profileImageUrl);
+
+                return Row(
+                  children: [
+                    ClipOval(
+                      child: Container(
+                        width: 58.w,
+                        height: 58.w,
+                        color: const Color(0xFFEDEDED),
+                        child: avatarUrl != null
+                            ? Image.network(
+                                avatarUrl,
+                                width: 58.w,
+                                height: 58.w,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: SvgPicture.asset(
+                                    'assets/images/profile_avatar.svg',
+                                    width: 30.w,
+                                    height: 30.w,
+                                  ),
+                                ),
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return Center(
+                                    child: SizedBox(
+                                      width: 22.w,
+                                      height: 22.w,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        value:
+                                            progress.expectedTotalBytes != null
+                                                ? progress
+                                                        .cumulativeBytesLoaded /
+                                                    progress
+                                                        .expectedTotalBytes!
+                                                : null,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Center(
+                                child: SvgPicture.asset(
+                                  'assets/images/profile_avatar.svg',
+                                  width: 30.w,
+                                  height: 30.w,
+                                ),
+                              ),
                       ),
                     ),
-                  ),
-                  12.horizontalSpace,
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        styledText("John Doe", TextType.font16500),
-                        2.verticalSpace,
-                        styledText(
-                          "White Belt",
-                          TextType.font12400,
-                          color: AppColors.newtextcolor,
+                    12.horizontalSpace,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          styledText(name, TextType.font16500),
+                          2.verticalSpace,
+                          styledText(
+                            _subtitleLine(u),
+                            TextType.font12400,
+                            color: AppColors.newtextcolor,
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        await Get.to(() => const EditProfileScreen());
+                        await auth.loadStoredUser();
+                      },
+                      child: Container(
+                        width: 28.w,
+                        height: 28.w,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.r),
+                          color: const Color(0xFFEAF8FF),
                         ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 28.w,
-                    height: 28.w,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.r),
-                      color: const Color(0xFFEAF8FF),
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        "assets/images/editprofileicon.svg",
-                        width: 16.w,
-                        height: 16.w,
+                        child: Center(
+                          child: SvgPicture.asset(
+                            'assets/images/editprofileicon.svg',
+                            width: 16.w,
+                            height: 16.w,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
               16.verticalSpace,
               _menuCard(
                 iconPath: "assets/images/unlockedbelticon.svg",
                 title: "Unlocked Belts",
-                onTap: () {},
+                onTap: () {
+                  Get.to(() => const UnlockedBeltsScreen());
+                },
+              ),
+              10.verticalSpace,
+              _menuCard(
+                iconPath: "assets/images/payemnticon.svg",
+                title: "Purchase Plan",
+                onTap: () {
+                  Get.to(() => const PurchasePlanScreen());
+                },
               ),
               10.verticalSpace,
               _menuCard(
                 iconPath: "assets/images/payemnticon.svg",
                 title: "Payment History",
-                onTap: () {},
+                onTap: () {
+                  Get.to(() => const PaymentHistoryScreen());
+                },
               ),
               10.verticalSpace,
               _menuCard(
@@ -183,8 +272,8 @@ class ProfilescreenState extends State<Profilescreen> {
               ),
               16.verticalSpace,
               GestureDetector(
-                onTap: () {
-                  Get.offAll(() => const SignInScreen());
+                onTap: () async {
+                  await auth.logout();
                 },
                 child: Row(
                   children: [

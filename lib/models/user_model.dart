@@ -4,6 +4,7 @@ class UserModel {
     required this.status,
     required this.email,
     required this.isVerified,
+    this.isCreated = true,
     required this.firstName,
     required this.lastName,
     required this.dob,
@@ -19,12 +20,16 @@ class UserModel {
     required this.createdAt,
     required this.updatedAt,
     required this.token,
+    this.subscriptionStatus = '',
+    this.planId,
   });
 
   final int? id;
   final String status;
   final String email;
   final bool isVerified;
+  /// From API `isCreated`. When `false`, the user should complete onboarding profile.
+  final bool isCreated;
   final String firstName;
   final String lastName;
   final String? dob;
@@ -40,6 +45,8 @@ class UserModel {
   final String createdAt;
   final String updatedAt;
   final String token;
+  final String subscriptionStatus;
+  final int? planId;
 
   String get fullName => '$firstName $lastName'.trim();
 
@@ -49,6 +56,8 @@ class UserModel {
       status: (json['status'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
       isVerified: json['isVerified'] == true,
+      isCreated:
+          json['isCreated'] == null ? true : json['isCreated'] == true,
       firstName: (json['firstName'] ?? '').toString(),
       lastName: (json['lastName'] ?? '').toString(),
       dob: json['dob']?.toString(),
@@ -64,6 +73,10 @@ class UserModel {
       createdAt: (json['createdAt'] ?? '').toString(),
       updatedAt: (json['updatedAt'] ?? '').toString(),
       token: (json['token'] ?? '').toString(),
+      subscriptionStatus: (json['subscriptionStatus'] ?? '').toString(),
+      planId: json['planId'] is int
+          ? json['planId'] as int
+          : int.tryParse('${json['planId'] ?? ''}'),
     );
   }
 
@@ -73,6 +86,7 @@ class UserModel {
       'status': status,
       'email': email,
       'isVerified': isVerified,
+      'isCreated': isCreated,
       'firstName': firstName,
       'lastName': lastName,
       'dob': dob,
@@ -88,6 +102,8 @@ class UserModel {
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'token': token,
+      'subscriptionStatus': subscriptionStatus,
+      'planId': planId,
     };
   }
 }

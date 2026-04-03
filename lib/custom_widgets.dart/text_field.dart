@@ -168,7 +168,7 @@ class AppInput extends StatelessWidget {
             onFieldSubmitted: onEnventSumbit,
             autofocus: isAutoFocus,
             style: GoogleFonts.inter(
-              fontWeight: FontWeight.w300,
+              fontWeight: FontWeight.w500,
               fontSize: 14.sp,
               color: AppColors.appbarTitleColor,
             ),
@@ -189,3 +189,5 @@ class AppInput extends StatelessWidget {
     );
   }
 }
+
+

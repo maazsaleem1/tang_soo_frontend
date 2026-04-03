@@ -1,39 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:tang_soo_karate/custom_widgets.dart/customize_video_player.dart';
+import 'package:get/get.dart';
+import 'package:tang_soo_karate/controllers/training_progress_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
 class Trainingscreen extends StatefulWidget {
-  const Trainingscreen({super.key});
+  /// 0 = All, 1 = Completed, 2 = Bookmarked
+  final int initialFilter;
+
+  const Trainingscreen({super.key, this.initialFilter = 0});
 
   @override
   State<Trainingscreen> createState() => TrainingscreenState();
 }
 
 class TrainingscreenState extends State<Trainingscreen> {
-  int _selectedFilter = 0;
-  int _expandedLessonIndex = 2;
+  static const Color _selectedTabBg = Color(0x1401708A);
+  static const Color _inactiveTabBg = Color(0xFFECECEC);
+  static const Color _inactiveTabText = Color(0xFFBDBDBD);
+
+  late int _selectedFilter;
+
   late final List<_TrainingLesson> _lessons = [
     _TrainingLesson(
       title: "Introduction Video",
-      videoSource: "assets/video/introductionvideo.mp4",
       completed: true,
       bookmarked: false,
     ),
-    _TrainingLesson(
-      title: "Pyung Ahn",
-      videoSource: "assets/video/videooftheweek.mp4",
-      completed: true,
-      bookmarked: true,
-    ),
+    _TrainingLesson(title: "Pyung Ahn", completed: true, bookmarked: true),
     _TrainingLesson(
       title: "Positive Mindset",
-      videoSource: "assets/video/videooftheweek.mp4",
       completed: false,
       bookmarked: false,
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedFilter = widget.initialFilter;
+    _hydrateFromProgress();
+  }
+
+  void _hydrateFromProgress() {
+    if (!Get.isRegistered<TrainingProgressController>()) return;
+    final c = Get.find<TrainingProgressController>();
+    for (final l in _lessons) {
+      if (c.isTrainingTitleCompleted(l.title)) {
+        l.completed = true;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,90 +63,9 @@ class TrainingscreenState extends State<Trainingscreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Row(
-              //   children: [
-              //     Icon(Icons.arrow_back, size: 18.sp),
-              //     const Spacer(),
-              //     styledText("Training", TextType.font14500),
-              //     const Spacer(),
-              //     Container(
-              //       width: 26.w,
-              //       height: 26.w,
-              //       decoration: const BoxDecoration(
-              //         color: AppColors.buttoncolour,
-              //         shape: BoxShape.circle,
-              //       ),
-              //       child: Icon(
-              //         Icons.notifications,
-              //         size: 15.sp,
-              //         color: Colors.white,
-              //       ),
-              //     ),
-              //   ],
-              // ),
-              14.verticalSpace,
-              styledText("Level 1 Training", TextType.font20700),
-              10.verticalSpace,
               _filterTabs(),
               10.verticalSpace,
               _buildFilteredLessonList(),
-              12.verticalSpace,
-              Row(
-                children: [
-                  styledText(
-                    "Current Level 1",
-                    TextType.font12400,
-                    color: const Color(0xFF9B9B9B),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.sports_martial_arts,
-                    size: 18.sp,
-                    color: const Color(0xFFB3B3B3),
-                  ),
-                ],
-              ),
-              4.verticalSpace,
-              styledText("Beginner to Red Belt", TextType.font16600),
-              8.verticalSpace,
-              Row(
-                children: [
-                  styledText(
-                    "Lessons completed",
-                    TextType.font12400,
-                    color: const Color(0xFF9B9B9B),
-                  ),
-                  const Spacer(),
-                  styledText(
-                    "${_lessons.where((e) => e.completed).length}/52",
-                    TextType.font16500,
-                  ),
-                ],
-              ),
-              10.verticalSpace,
-              Row(
-                children: [
-                  styledText("Belt Progression", TextType.font14500),
-                  const Spacer(),
-                  styledText("20%", TextType.font14500),
-                ],
-              ),
-              6.verticalSpace,
-              ClipRRect(
-                borderRadius: BorderRadius.circular(30.r),
-                child: const LinearProgressIndicator(
-                  value: 0.2,
-                  minHeight: 6,
-                  backgroundColor: Color(0xFFD9D9D9),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE53935)),
-                ),
-              ),
-              8.verticalSpace,
-              styledText(
-                "You're 33% closer to your next belt!",
-                TextType.font12400,
-                color: const Color(0xFF9B9B9B),
-              ),
             ],
           ),
         ),
@@ -138,46 +75,45 @@ class TrainingscreenState extends State<Trainingscreen> {
 
   Widget _filterTabs() {
     final tabs = ["All", "Completed", "Bookmarked"];
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F1F1),
-        borderRadius: BorderRadius.circular(6.r),
-      ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.r),
       child: Row(
-        children: List.generate(tabs.length, (index) {
-          final isSelected = _selectedFilter == index;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedFilter = index;
-                  if (_expandedLessonIndex != -1 &&
-                      !_isLessonVisible(_expandedLessonIndex)) {
-                    _expandedLessonIndex = -1;
-                  }
-                });
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 9.h),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected ? const Color(0xFFD7E5EA) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Center(
-                  child: styledText(
-                    tabs[index],
-                    TextType.font16500,
-                    color:
-                        isSelected
-                            ? AppColors.buttoncolour
-                            : const Color(0xFFABABAB),
-                  ),
+        children: [
+          for (var i = 0; i < tabs.length; i++) ...[
+            if (i > 0)
+              Container(width: 1, height: 28.h, color: const Color(0xFFE0E0E0)),
+            Expanded(child: _filterTabCell(i, tabs[i])),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _filterTabCell(int index, String label) {
+    final selected = _selectedFilter == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilter = index),
+      child: Container(
+        color: selected ? _selectedTabBg : _inactiveTabBg,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              child: Center(
+                child: styledText(
+                  label,
+                  TextType.font16500,
+                  color: selected ? AppColors.buttoncolour : _inactiveTabText,
                 ),
               ),
             ),
-          );
-        }),
+            Container(
+              height: 3.h,
+              color: selected ? AppColors.buttoncolour : Colors.transparent,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -209,183 +145,114 @@ class TrainingscreenState extends State<Trainingscreen> {
       children: List.generate(visibleIndexes.length, (listIdx) {
         final lessonIndex = visibleIndexes[listIdx];
         final lesson = _lessons[lessonIndex];
-        final expanded = _expandedLessonIndex == lessonIndex;
         return Padding(
-          padding: EdgeInsets.only(bottom: 8.h),
-          child: _lessonRow(
+          padding: EdgeInsets.only(bottom: 10.h),
+          child: _lessonCard(
             lessonIndex: lessonIndex,
             title: lesson.title,
             completed: lesson.completed,
             showBookmark: lesson.bookmarked,
-            expanded: expanded,
-            videoSource: lesson.videoSource,
           ),
         );
       }),
     );
   }
 
-  bool _isLessonVisible(int index) {
-    if (index < 0 || index >= _lessons.length) return false;
-    if (_selectedFilter == 1) return _lessons[index].completed;
-    if (_selectedFilter == 2) return _lessons[index].bookmarked;
-    return true;
-  }
-
-  Widget _lessonRow({
+  Widget _lessonCard({
     required int lessonIndex,
     required String title,
     required bool completed,
     required bool showBookmark,
-    required bool expanded,
-    required String videoSource,
   }) {
-    if (!expanded) {
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            _expandedLessonIndex = lessonIndex;
-          });
-        },
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 9.h),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEDEDED),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Row(
-            children: [
-              if (showBookmark) ...[
-                Icon(
-                  Icons.bookmark,
-                  size: 15.sp,
-                  color: const Color(0xFF1F4F9A),
-                ),
-                6.horizontalSpace,
-              ],
-              Expanded(child: styledText(title, TextType.font14500)),
-              _statusCircle(completed: completed),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(8.w, 8.h, 8.w, 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: AppColors.buttoncolour,
-        borderRadius: BorderRadius.circular(10.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: const Color(0xFFE8E8E8)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              styledText(title, TextType.font14500, color: Colors.white),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _lessons[lessonIndex].bookmarked =
-                        !_lessons[lessonIndex].bookmarked;
-                    if (_selectedFilter == 2 &&
-                        !_lessons[lessonIndex].bookmarked) {
-                      _expandedLessonIndex = -1;
-                    }
-                  });
-                },
-                child: Icon(
-                  showBookmark ? Icons.bookmark : Icons.bookmark_border,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ],
-          ),
-          6.verticalSpace,
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10.r),
-            child: CustomVideoPlayer(
-              videoSource: videoSource,
-              isAsset: true,
-              height: 120.h,
-              width: double.infinity,
-              autoPlay: false,
-              looping: false,
-              showControls: true,
-              allowFullScreen: true,
-              fit: BoxFit.cover,
-            ),
-          ),
-          8.verticalSpace,
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 7.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3CB471),
-              borderRadius: BorderRadius.circular(100.r),
-            ),
-            child: GestureDetector(
+          if (showBookmark) ...[
+            GestureDetector(
               onTap: () {
                 setState(() {
-                  _lessons[lessonIndex].completed = true;
+                  _lessons[lessonIndex].bookmarked =
+                      !_lessons[lessonIndex].bookmarked;
                 });
               },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  styledText(
-                    "Mark as Complete",
-                    TextType.font12400,
-                    color: Colors.white,
-                  ),
-                  6.horizontalSpace,
-                  Icon(
-                    _lessons[lessonIndex].completed
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    size: 16.sp,
-                    color: Colors.white,
-                  ),
-                ],
+              child: Icon(
+                Icons.bookmark_rounded,
+                size: 22.sp,
+                color: const Color(0xFF1F4F9A),
               ),
             ),
+            10.horizontalSpace,
+          ],
+          Expanded(
+            child: styledText(
+              title,
+              TextType.minifont16600hard,
+              color: const Color(0xFF333333),
+            ),
           ),
+          8.horizontalSpace,
+          _completionGlyph(completed: completed),
         ],
       ),
     );
   }
 
-  Widget _statusCircle({required bool completed}) {
-    return Container(
-      width: 18.w,
-      height: 18.w,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: completed ? const Color(0xFF3CB471) : Colors.transparent,
-        border: Border.all(
-          color: completed ? const Color(0xFF3CB471) : const Color(0xFFD9D9D9),
+  Widget _completionGlyph({required bool completed}) {
+    if (completed) {
+      return Container(
+        width: 28.w,
+        height: 28.w,
+        decoration: const BoxDecoration(
+          color: Color(0xFF3CB471),
+          shape: BoxShape.circle,
         ),
-      ),
-      child:
-          completed
-              ? Icon(Icons.check, size: 12.sp, color: Colors.white)
-              : null,
+        child: Icon(Icons.check_rounded, color: Colors.white, size: 16.sp),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.arrow_forward_rounded,
+          color: AppColors.buttoncolour,
+          size: 20.sp,
+        ),
+        Container(
+          width: 2.5.w,
+          height: 16.h,
+          margin: EdgeInsets.only(left: 1.w),
+          decoration: BoxDecoration(
+            color: AppColors.buttoncolour,
+            borderRadius: BorderRadius.circular(1.r),
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _TrainingLesson {
   final String title;
-  final String videoSource;
   bool completed;
   bool bookmarked;
 
   _TrainingLesson({
     required this.title,
-    required this.videoSource,
     this.completed = false,
     this.bookmarked = false,
   });
