@@ -9,6 +9,7 @@ import 'package:tang_soo_karate/authentication/verify_otp_screen.dart';
 import 'package:tang_soo_karate/models/user_model.dart';
 import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
 import 'package:tang_soo_karate/services/api/api_storage.dart';
+import 'package:tang_soo_karate/services/api/api_toast.dart';
 import 'package:tang_soo_karate/services/auth/auth_service.dart';
 import 'package:tang_soo_karate/utils/field_validator.dart';
 
@@ -21,6 +22,8 @@ class AuthController extends GetxController {
   final GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> forgotPasswordFormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> resetPasswordFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> changePasswordProfileFormKey =
+      GlobalKey<FormState>();
 
   final rememberMe = false.obs;
   final isLoginLoading = false.obs;
@@ -351,11 +354,32 @@ class AuthController extends GetxController {
     return false;
   }
 
-  Future<void> resetPassword() async {
+  bool _changePasswordResponseOk(dynamic response) {
+    if (response is! Map) return false;
+    final m = Map<String, dynamic>.from(response);
+    return _isTruthySuccess(m['success']) || _isTruthySuccess(m['status']);
+  }
+
+  void _toastChangePasswordError(dynamic response) {
+    var msg = 'Failed to change password';
+    if (response is Map) {
+      final m = Map<String, dynamic>.from(response);
+      msg =
+          m['message']?.toString() ??
+          m['error']?.toString() ??
+          msg;
+    }
+    AppErrorToast(title: msg).showToast(Get.context);
+  }
+
+  Future<bool> _submitPasswordChange({
+    required GlobalKey<FormState> formKey,
+    required bool signOutAfterSuccess,
+  }) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
-    if (!(resetPasswordFormKey.currentState?.validate() ?? false)) {
-      return;
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return false;
     }
 
     try {
@@ -364,15 +388,40 @@ class AuthController extends GetxController {
         oldPassword: oldPasswordController.text,
         newPassword: newPasswordController.text,
         context: Get.context,
+        showSnackbar: signOutAfterSuccess,
       );
 
-      if (response['success'] == true) {
-        clearResetPasswordFields();
+      if (!_changePasswordResponseOk(response)) {
+        if (!signOutAfterSuccess) {
+          _toastChangePasswordError(response);
+        }
+        return false;
+      }
+
+      clearResetPasswordFields();
+      if (signOutAfterSuccess) {
         Get.offAll(() => const SignInScreen());
       }
+      return true;
     } finally {
       isResetPasswordLoading.value = false;
     }
+  }
+
+  /// Forgot-password flow (after OTP) — signs out to login.
+  Future<void> resetPassword() async {
+    await _submitPasswordChange(
+      formKey: resetPasswordFormKey,
+      signOutAfterSuccess: true,
+    );
+  }
+
+  /// Profile settings — stays logged in.
+  Future<bool> changePasswordFromProfile() async {
+    return _submitPasswordChange(
+      formKey: changePasswordProfileFormKey,
+      signOutAfterSuccess: false,
+    );
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 /// In-app YouTube playback via [youtube_player_flutter] (IFrame API).
@@ -20,6 +21,7 @@ class VideoOfWeekEmbed extends StatefulWidget {
 
 class _VideoOfWeekEmbedState extends State<VideoOfWeekEmbed> {
   YoutubePlayerController? _controller;
+  bool _wasFullScreen = false;
 
   @override
   void initState() {
@@ -35,11 +37,57 @@ class _VideoOfWeekEmbedState extends State<VideoOfWeekEmbed> {
           controlsVisibleAtStart: false,
         ),
       );
+      _controller!.addListener(_onYoutubeControllerUpdate);
+    }
+  }
+
+  void _onYoutubeControllerUpdate() {
+    final c = _controller;
+    if (c == null || !mounted) return;
+
+    final fs = c.value.isFullScreen;
+    if (fs == _wasFullScreen) return;
+    _wasFullScreen = fs;
+
+    if (fs) {
+      Future.microtask(() {
+        if (!mounted) return;
+        final stillFs = _controller?.value.isFullScreen ?? false;
+        if (!stillFs) return;
+
+        SystemChrome.setPreferredOrientations(const [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+        ]);
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+        final screen = MediaQuery.sizeOf(context);
+        _controller?.fitHeight(screen);
+      });
+    } else {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.restoreSystemUIOverlays();
+
+      Future.microtask(() {
+        if (!mounted) return;
+        _controller?.fitHeight(Size(widget.width, widget.height));
+      });
     }
   }
 
   @override
   void dispose() {
+    _controller?.removeListener(_onYoutubeControllerUpdate);
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.restoreSystemUIOverlays();
     _controller?.dispose();
     super.dispose();
   }

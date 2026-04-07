@@ -30,6 +30,8 @@ class ApiConfig {
 
   static const String faq = '/faq';
 
+  static const String contactsCreate = '/contacts/create';
+
   static const String videoOfTheWeek = '/lessons/video-of-the-week';
 
   /// CMS page by slug, e.g. `term` → `/pages/term`.

@@ -141,11 +141,13 @@ class AuthService {
     required String oldPassword,
     required String newPassword,
     BuildContext? context,
+    bool showSnackbar = true,
   }) async {
     final response = await _apiService.putApi(
       url: ApiConfig.url(ApiConfig.resetPassword),
       context: context,
       body: {'oldPassword': oldPassword, 'newPassword': newPassword},
+      showSnackbar: showSnackbar,
     );
     return (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
   }

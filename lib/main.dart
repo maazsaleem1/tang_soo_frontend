@@ -1,13 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:tang_soo_karate/on_boarding_screens.dart/splash_screens.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   HttpOverrides.global = MyHttpOverrides();
   runApp(const MyApp());
 }

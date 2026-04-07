@@ -48,9 +48,10 @@ class ProfilescreenState extends State<Profilescreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Get.isRegistered<AuthController>()
-        ? Get.find<AuthController>()
-        : Get.put(AuthController(), permanent: true);
+    final auth =
+        Get.isRegistered<AuthController>()
+            ? Get.find<AuthController>()
+            : Get.put(AuthController(), permanent: true);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundcolour,
@@ -65,7 +66,9 @@ class ProfilescreenState extends State<Profilescreen> {
                     (u?.fullName.trim().isNotEmpty ?? false)
                         ? u!.fullName.trim()
                         : 'User';
-                final avatarUrl = ApiConfig.absoluteMediaUrl(u?.profileImageUrl);
+                final avatarUrl = ApiConfig.absoluteMediaUrl(
+                  u?.profileImageUrl,
+                );
 
                 return Row(
                   children: [
@@ -74,46 +77,49 @@ class ProfilescreenState extends State<Profilescreen> {
                         width: 58.w,
                         height: 58.w,
                         color: const Color(0xFFEDEDED),
-                        child: avatarUrl != null
-                            ? Image.network(
-                                avatarUrl,
-                                width: 58.w,
-                                height: 58.w,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Center(
+                        child:
+                            avatarUrl != null
+                                ? Image.network(
+                                  avatarUrl,
+                                  width: 58.w,
+                                  height: 58.w,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (_, __, ___) => Center(
+                                        child: SvgPicture.asset(
+                                          'assets/images/profile_avatar.svg',
+                                          width: 30.w,
+                                          height: 30.w,
+                                        ),
+                                      ),
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return Center(
+                                      child: SizedBox(
+                                        width: 22.w,
+                                        height: 22.w,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          value:
+                                              progress.expectedTotalBytes !=
+                                                      null
+                                                  ? progress
+                                                          .cumulativeBytesLoaded /
+                                                      progress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                                : Center(
                                   child: SvgPicture.asset(
                                     'assets/images/profile_avatar.svg',
                                     width: 30.w,
                                     height: 30.w,
                                   ),
                                 ),
-                                loadingBuilder: (context, child, progress) {
-                                  if (progress == null) return child;
-                                  return Center(
-                                    child: SizedBox(
-                                      width: 22.w,
-                                      height: 22.w,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        value:
-                                            progress.expectedTotalBytes != null
-                                                ? progress
-                                                        .cumulativeBytesLoaded /
-                                                    progress
-                                                        .expectedTotalBytes!
-                                                : null,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              )
-                            : Center(
-                                child: SvgPicture.asset(
-                                  'assets/images/profile_avatar.svg',
-                                  width: 30.w,
-                                  height: 30.w,
-                                ),
-                              ),
                       ),
                     ),
                     12.horizontalSpace,
@@ -225,7 +231,7 @@ class ProfilescreenState extends State<Profilescreen> {
                     _arrowRow(
                       "Change Password",
                       onTap: () {
-                        Get.to(() => ChangePasswordScreen());
+                        Get.to(() => const ChangePasswordScreen());
                       },
                     ),
                   ],

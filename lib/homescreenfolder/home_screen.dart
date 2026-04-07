@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (VideoOfWeekModel.isYoutubeUrl(url)) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(10.r),
-          child: VideoOfWeekEmbed(videoUrl: url, height: 130.h, width: 1.sw),
+          child: VideoOfWeekEmbed(videoUrl: url, height: 200.h, width: 1.sw),
         );
       }
       return ClipRRect(
