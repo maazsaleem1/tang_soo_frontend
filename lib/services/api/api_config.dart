@@ -34,6 +34,12 @@ class ApiConfig {
 
   static const String videoOfTheWeek = '/lessons/video-of-the-week';
 
+  /// Lessons for a belt, e.g. belt `1` → `/lessons/belt/1`.
+  static String lessonsBelt(int beltId) => '/lessons/belt/$beltId';
+
+  /// Plan lessons preview, e.g. plan `1` → `/plans/1/level`.
+  static String planLevel(int planId) => '/plans/$planId/level';
+
   /// CMS page by slug, e.g. `term` → `/pages/term`.
   static String pageBySlug(String slug) => '/pages/$slug';
 }

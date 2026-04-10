@@ -171,7 +171,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
               locked
                   ? null
                   : () {
-                    Get.to(() => const LevelOneScreen());
+                    Get.to(
+                      () => const LevelOneScreen(
+                        beltId: 1,
+                        beltTitle: 'Video Of The Week',
+                      ),
+                    );
                   },
           borderRadius: BorderRadius.circular(12.r),
           child: Ink(

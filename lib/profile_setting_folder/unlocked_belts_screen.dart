@@ -133,7 +133,12 @@ class UnlockedBeltsScreen extends StatelessWidget {
                 final locked = row.status == _LessonUiStatus.locked;
                 VoidCallback? openLevelOne;
                 if (!locked && row.number == 1) {
-                  openLevelOne = () => Get.to(() => const LevelOneScreen());
+                  openLevelOne = () => Get.to(
+                    () => const LevelOneScreen(
+                      beltId: 1,
+                      beltTitle: 'Video Of The Week',
+                    ),
+                  );
                 }
                 return Padding(
                   padding: EdgeInsets.only(bottom: 10.h),

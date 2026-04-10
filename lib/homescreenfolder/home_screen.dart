@@ -2,22 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:tang_soo_karate/controllers/home_plan_modules_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/app_button.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/customize_video_player.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/video_of_week_embed.dart';
+import 'package:tang_soo_karate/models/plan_level_preview_model.dart';
 import 'package:tang_soo_karate/models/video_of_week_model.dart';
 import 'package:tang_soo_karate/services/lessons/lesson_service.dart';
 import 'package:tang_soo_karate/homescreenfolder/level_one_screen.dart';
+import 'package:tang_soo_karate/homescreenfolder/level_three_screen.dart';
+import 'package:tang_soo_karate/homescreenfolder/level_two_screen.dart';
 import 'package:tang_soo_karate/on_boarding_screens.dart/purchase_plan_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
-
-class _ModuleTileData {
-  final String title;
-  final bool showFreeTrialLink;
-
-  const _ModuleTileData({required this.title, this.showFreeTrialLink = false});
-}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,66 +37,19 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color _moduleTileBg = Color(0xFF01556A);
   static const Color _lockColor = Color(0xFFF7A600);
 
-  int _selectedLevelIndex = 0;
-
-  static const List<_ModuleTileData> _level1Modules = [
-    _ModuleTileData(title: "Foundations & Intro", showFreeTrialLink: true),
-    _ModuleTileData(title: "White Belt"),
-    _ModuleTileData(title: "Yellow & Orange Progression"),
-    _ModuleTileData(title: "Green Belt"),
-    _ModuleTileData(title: "Red Belt"),
-    _ModuleTileData(title: "Cho Dan Bo / Pre-Black Belt Prep"),
-    _ModuleTileData(title: "Weapons Introduction"),
-  ];
-
-  static const List<_ModuleTileData> _level2Modules = [
-    _ModuleTileData(title: "Intermediate Foundations"),
-    _ModuleTileData(title: "Blue Belt Path"),
-    _ModuleTileData(title: "Advanced Combinations"),
-    _ModuleTileData(title: "Sparring Basics"),
-    _ModuleTileData(title: "Forms Level 2"),
-    _ModuleTileData(title: "Breaking Techniques"),
-    _ModuleTileData(title: "Instructor Prep"),
-  ];
-
-  static const List<_ModuleTileData> _level3Modules = [
-    _ModuleTileData(title: "Advanced Mastery"),
-    _ModuleTileData(title: "Black Belt Curriculum"),
-    _ModuleTileData(title: "Weapons Advanced"),
-    _ModuleTileData(title: "Teaching Modules"),
-    _ModuleTileData(title: "Tournament Prep"),
-    _ModuleTileData(title: "Leadership Training"),
-    _ModuleTileData(title: "Certification Track"),
-  ];
-
-  List<_ModuleTileData> get _currentModules {
-    switch (_selectedLevelIndex) {
-      case 0:
-        return _level1Modules;
-      case 1:
-        return _level2Modules;
-      default:
-        return _level3Modules;
-    }
-  }
-
-  String get _currentLevelTitle => "Level ${_selectedLevelIndex + 1}";
-
-  String get _dialogAmount {
-    switch (_selectedLevelIndex) {
-      case 0:
-        return "\$4.99";
-      case 1:
-        return "\$5.99";
-      default:
-        return "\$6.99";
-    }
-  }
-
   @override
   void initState() {
     super.initState();
+    Get.put(HomePlanModulesController());
     _loadVideoOfTheWeek();
+  }
+
+  @override
+  void dispose() {
+    if (Get.isRegistered<HomePlanModulesController>()) {
+      Get.delete<HomePlanModulesController>();
+    }
+    super.dispose();
   }
 
   Future<void> _loadVideoOfTheWeek() async {
@@ -268,52 +219,58 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _levelTabBar() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8.r),
-      child: Row(
-        children: [
-          Expanded(
-            child: _levelTab(
-              index: 0,
-              label: "Level 1",
-              showRightDivider: true,
+    final planCtrl = Get.find<HomePlanModulesController>();
+    return Obx(() {
+      final selectedIndex = planCtrl.selectedLevelIndex.value;
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.r),
+        child: Row(
+          children: [
+            Expanded(
+              child: _levelTab(
+                planCtrl: planCtrl,
+                index: 0,
+                selectedIndex: selectedIndex,
+                label: "Level 1",
+                showRightDivider: true,
+              ),
             ),
-          ),
-          Expanded(
-            child: _levelTab(
-              index: 1,
-              label: "Level 2",
-              showRightDivider: true,
+            Expanded(
+              child: _levelTab(
+                planCtrl: planCtrl,
+                index: 1,
+                selectedIndex: selectedIndex,
+                label: "Level 2",
+                showRightDivider: true,
+              ),
             ),
-          ),
-          Expanded(
-            child: _levelTab(
-              index: 2,
-              label: "Level 3",
-              showRightDivider: false,
+            Expanded(
+              child: _levelTab(
+                planCtrl: planCtrl,
+                index: 2,
+                selectedIndex: selectedIndex,
+                label: "Level 3",
+                showRightDivider: false,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _levelTab({
+    required HomePlanModulesController planCtrl,
     required int index,
+    required int selectedIndex,
     required String label,
     required bool showRightDivider,
   }) {
-    final selected = _selectedLevelIndex == index;
+    final selected = selectedIndex == index;
     final borderColor = selected ? _tealPrimary : const Color(0xFFE0E0E0);
 
     return GestureDetector(
-      onTap: () {
-        if (index == 1 || index == 2) {
-          Get.to(() => const PurchasePlanScreen());
-          return;
-        }
-        setState(() => _selectedLevelIndex = index);
-      },
+      onTap: () => planCtrl.onLevelTabTap(index),
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 12.h),
         decoration: BoxDecoration(
@@ -339,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _levelModulesCard() {
+    final planCtrl = Get.find<HomePlanModulesController>();
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(12.w, 14.h, 12.w, 14.h),
@@ -346,35 +304,123 @@ class _HomeScreenState extends State<HomeScreen> {
         color: AppColors.buttoncolour,
         borderRadius: BorderRadius.circular(12.r),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _currentLevelTitle,
+      child: Obx(() {
+        if (planCtrl.isLoading.value) {
+          return const _PlanModulesCardShimmer();
+        }
+        if (planCtrl.errorMessage.value != null) {
+          return _planModulesError(planCtrl);
+        }
+        if (planCtrl.sections.isEmpty) {
+          return Text(
+            'No lessons available for this plan yet.',
             style: GoogleFonts.inter(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
             ),
-          ),
-          12.verticalSpace,
-          ..._currentModules.map(_moduleTile),
-        ],
-      ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              planCtrl.headerTitle,
+              style: GoogleFonts.inter(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            if (planCtrl.totalLessons.value > 0) ...[
+              4.verticalSpace,
+              Text(
+                '${planCtrl.totalLessons.value} lessons',
+                style: GoogleFonts.inter(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+            12.verticalSpace,
+            ...planCtrl.sections.map((s) => _moduleTile(context, planCtrl, s)),
+          ],
+        );
+      }),
     );
   }
 
-  Widget _moduleTile(_ModuleTileData data) {
-    final bool showTrial = _selectedLevelIndex == 0 && data.showFreeTrialLink;
+  Widget _planModulesError(HomePlanModulesController planCtrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Could not load plan',
+          style: GoogleFonts.inter(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        8.verticalSpace,
+        Text(
+          planCtrl.errorMessage.value ?? '',
+          style: GoogleFonts.inter(fontSize: 13.sp, color: Colors.white70),
+        ),
+        12.verticalSpace,
+        TextButton(
+          onPressed: planCtrl.retry,
+          child: Text(
+            'Retry',
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              decoration: TextDecoration.underline,
+              decorationColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _moduleTile(
+    BuildContext context,
+    HomePlanModulesController planCtrl,
+    PlanLevelSection section,
+  ) {
+    final showTrial = planCtrl.showFreeTrialFor(section);
+    final levelIdx = planCtrl.selectedLevelIndex.value;
+    final levelTitle = planCtrl.levelLabelForIndex(levelIdx);
+    final amount = planCtrl.dialogAmountForLevel(levelIdx);
 
     return Padding(
       padding: EdgeInsets.only(bottom: 8.h),
       child: GestureDetector(
         onTap: () {
-          _showFreeTrialDialog(
-            level: _currentLevelTitle,
-            amount: _dialogAmount,
-          );
+          if (showTrial) {
+            _showFreeTrialDialog(
+              context: context,
+              level: levelTitle,
+              amount: amount,
+            );
+            return;
+          }
+          if (planCtrl.isBeltLocked(section)) {
+            Get.to(() => const PurchasePlanScreen());
+            return;
+          }
+          final bid = section.beltId;
+          final btitle = section.beltTitle;
+          if (levelIdx == 0) {
+            Get.to(() => LevelOneScreen(beltId: bid, beltTitle: btitle));
+          } else if (levelIdx == 1) {
+            Get.to(() => LevelTwoScreen(beltId: bid, beltTitle: btitle));
+          } else {
+            Get.to(() => LevelThreeScreen(beltId: bid, beltTitle: btitle));
+          }
         },
         child: Container(
           width: double.infinity,
@@ -387,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Expanded(
                 child: Text(
-                  data.title,
+                  section.beltTitle,
                   style: GoogleFonts.inter(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
@@ -406,8 +452,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     decorationColor: Colors.white,
                   ),
                 )
+              else if (planCtrl.isBeltLocked(section))
+                Icon(Icons.lock, size: 18.sp, color: _lockColor)
               else
-                Icon(Icons.lock, size: 18.sp, color: _lockColor),
+                Icon(
+                  Icons.play_circle_outline,
+                  size: 20.sp,
+                  color: Colors.white,
+                ),
             ],
           ),
         ),
@@ -416,6 +468,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showFreeTrialDialog({
+    required BuildContext context,
     required String level,
     required String amount,
   }) async {
@@ -473,7 +526,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPress: () {
                     Get.back();
                     if (level == "Level 1") {
-                      Get.to(() => const LevelOneScreen());
+                      Get.to(
+                        () => const LevelOneScreen(
+                          beltId: 0,
+                          beltTitle: 'Foundations & Intro',
+                        ),
+                      );
                     }
                   },
                 ),
@@ -497,6 +555,59 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Skeleton for plan title + module rows while [HomePlanModulesController] loads.
+class _PlanModulesCardShimmer extends StatelessWidget {
+  const _PlanModulesCardShimmer();
+
+  static const _base = Color(0xFF014A5C);
+  static const _highlight = Color(0xFF027A96);
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: _base,
+      highlightColor: _highlight,
+      period: const Duration(milliseconds: 1300),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 0.55.sw,
+            height: 20.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+          ),
+          8.verticalSpace,
+          Container(
+            width: 0.28.sw,
+            height: 12.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+          ),
+          12.verticalSpace,
+          ...List.generate(6, (i) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: Container(
+                width: double.infinity,
+                height: 44.h,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 }

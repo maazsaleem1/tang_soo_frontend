@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tang_soo_karate/homescreenfolder/belt_lessons_screen.dart';
 
-/// Opens belt lessons for plan level 1 (or any belt). Pass API `beltId` and label from the plan preview.
-class LevelOneScreen extends StatelessWidget {
-  const LevelOneScreen({
+/// Same flow as [LevelOneScreen] — used when entering a belt from plan level 2.
+class LevelTwoScreen extends StatelessWidget {
+  const LevelTwoScreen({
     super.key,
     required this.beltId,
     required this.beltTitle,
