@@ -30,8 +30,8 @@ class AuthService {
         (token != null && token.isNotEmpty)
             ? token
             : (userToken != null && userToken.isNotEmpty)
-                ? userToken
-                : (existingToken ?? '');
+            ? userToken
+            : (existingToken ?? '');
 
     final normalizedUser = <String, dynamic>{
       ...sourceUser,

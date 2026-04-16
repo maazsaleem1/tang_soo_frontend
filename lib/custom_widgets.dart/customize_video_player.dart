@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
 import 'dart:developer';
+
+import 'package:chewie/chewie.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
   final String videoSource;
@@ -42,6 +44,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   ChewieController? _chewieController;
   bool _isInitialized = false;
 
+  /// Stacked expand control + Chewie’s built-in fullscreen would show twice;
+  /// we hide Chewie’s control and open [PortraitFullScreenVideoPage] instead.
+  bool get _stackedCoverWithControls =>
+      widget.showControls && widget.fit == BoxFit.cover;
+
   /// Last duration (ms) we treated as “published” to the UI. When the engine
   /// reports 0 first then a real duration later, we rebuild once so Chewie’s
   /// timer/scrubber aren’t stuck on 00:00.
@@ -81,7 +88,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         autoPlay: widget.autoPlay,
         looping: widget.looping,
         showControls: widget.showControls,
-        allowFullScreen: widget.allowFullScreen,
+        allowFullScreen:
+            widget.allowFullScreen && !_stackedCoverWithControls,
       );
 
       _videoController.addListener(_onPlaybackUpdated);
@@ -157,6 +165,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     super.dispose();
   }
 
+  Future<void> _openPortraitFullScreen() async {
+    if (!_stackedCoverWithControls || !widget.allowFullScreen) return;
+    await _videoController.pause();
+    if (!mounted) return;
+    await Navigator.of(context, rootNavigator: true).push<void>(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder:
+            (_) => PortraitFullScreenVideoPage(
+              videoSource: widget.videoSource,
+              isAsset: widget.isAsset,
+              initialPosition: _videoController.value.position,
+              contentDurationHint: widget.contentDurationHint,
+              looping: widget.looping,
+            ),
+      ),
+    );
+    if (!mounted) return;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -195,7 +223,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                                   ),
                                 ),
                               ),
-                              if (widget.allowFullScreen)
+                              if (widget.allowFullScreen &&
+                                  _stackedCoverWithControls)
                                 Positioned(
                                   right: 8,
                                   bottom: 8,
@@ -204,9 +233,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                                     borderRadius: BorderRadius.circular(20),
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(20),
-                                      onTap: () {
-                                        _chewieController?.enterFullScreen();
-                                      },
+                                      onTap: _openPortraitFullScreen,
                                       child: const Padding(
                                         padding: EdgeInsets.all(6),
                                         child: Icon(
@@ -239,6 +266,171 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                     },
                   )
               : const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Portrait, immersive full-screen for MP4/network (single expand control; mirrors
+/// [VideoOfWeekEmbed] route UX). Chewie fullscreen is disabled to avoid duplicates.
+class PortraitFullScreenVideoPage extends StatefulWidget {
+  const PortraitFullScreenVideoPage({
+    super.key,
+    required this.videoSource,
+    required this.isAsset,
+    this.initialPosition = Duration.zero,
+    this.contentDurationHint,
+    this.looping = true,
+  });
+
+  final String videoSource;
+  final bool isAsset;
+  final Duration initialPosition;
+  final Duration? contentDurationHint;
+  final bool looping;
+
+  @override
+  State<PortraitFullScreenVideoPage> createState() =>
+      _PortraitFullScreenVideoPageState();
+}
+
+class _PortraitFullScreenVideoPageState extends State<PortraitFullScreenVideoPage> {
+  late VideoPlayerController _video;
+  ChewieController? _chewie;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    _boot();
+  }
+
+  Future<void> _boot() async {
+    try {
+      _video =
+          widget.isAsset
+              ? VideoPlayerController.asset(widget.videoSource)
+              : VideoPlayerController.networkUrl(Uri.parse(widget.videoSource));
+      await _video.initialize();
+      await _warmDurationIfNeeded();
+      if (widget.initialPosition > Duration.zero) {
+        await _video.seekTo(widget.initialPosition);
+      }
+      if (!mounted) return;
+      _chewie = ChewieController(
+        videoPlayerController: _video,
+        autoPlay: true,
+        looping: widget.looping,
+        showControls: true,
+        allowFullScreen: false,
+      );
+      setState(() => _ready = true);
+    } catch (e, st) {
+      log('PortraitFullScreenVideoPage._boot: $e\n$st');
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _warmDurationIfNeeded() async {
+    if (_video.value.duration > Duration.zero) return;
+
+    Future<void> waitWhile(bool Function() condition) async {
+      final deadline = DateTime.now().add(const Duration(milliseconds: 2000));
+      while (condition() && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+      }
+    }
+
+    final previousVolume = _video.value.volume;
+    await _video.setVolume(0);
+    try {
+      await _video.play();
+      await waitWhile(() => _video.value.duration == Duration.zero);
+
+      final hint = widget.contentDurationHint;
+      if (hint != null &&
+          hint > Duration.zero &&
+          _video.value.duration == Duration.zero) {
+        await _video.seekTo(
+          Duration(milliseconds: hint.inMilliseconds ~/ 2),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        await waitWhile(() => _video.value.duration == Duration.zero);
+        await _video.seekTo(Duration.zero);
+      }
+    } finally {
+      await _video.pause();
+      await _video.seekTo(Duration.zero);
+      await _video.setVolume(previousVolume);
+    }
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.restoreSystemUIOverlays();
+    _chewie?.dispose();
+    _video.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_ready && _chewie != null)
+              LayoutBuilder(
+                builder: (context, c) {
+                  final maxW = c.maxWidth;
+                  final maxH = c.maxHeight;
+                  final sz = _video.value.size;
+                  final vw = sz.width;
+                  final vh = sz.height;
+                  if (vw <= 0 || vh <= 0) {
+                    return Center(
+                      child: SizedBox(
+                        width: maxW,
+                        height: maxH,
+                        child: Chewie(controller: _chewie!),
+                      ),
+                    );
+                  }
+                  return Center(
+                    child: SizedBox(
+                      width: maxW,
+                      height: maxH,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        clipBehavior: Clip.hardEdge,
+                        child: SizedBox(
+                          width: vw,
+                          height: vh,
+                          child: Chewie(controller: _chewie!),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              )
+            else
+              const Center(
+                child: CircularProgressIndicator(color: Colors.white70),
+              ),
+            Positioned(
+              top: 4,
+              left: 4,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

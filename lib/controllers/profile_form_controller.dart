@@ -13,7 +13,6 @@ import 'package:tang_soo_karate/on_boarding_screens.dart/introduction_video_scre
 import 'package:tang_soo_karate/res/app_colours.dart';
 import 'package:tang_soo_karate/services/api/api_config.dart';
 
-
 enum ProfileFormMode { create, edit }
 
 class ProfileFormController extends GetxController {
@@ -51,9 +50,10 @@ class ProfileFormController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _auth = Get.isRegistered<AuthController>()
-        ? Get.find<AuthController>()
-        : Get.put(AuthController(), permanent: true);
+    _auth =
+        Get.isRegistered<AuthController>()
+            ? Get.find<AuthController>()
+            : Get.put(AuthController(), permanent: true);
     if (mode == ProfileFormMode.create) {
       _initCreate();
     } else {

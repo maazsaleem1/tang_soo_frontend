@@ -6,6 +6,7 @@ class LessonMedia {
     required this.lessonId,
     required this.type,
     required this.url,
+    this.thumbnail,
     this.provider,
     this.mimeType,
     this.duration,
@@ -16,17 +17,21 @@ class LessonMedia {
   final int lessonId;
   final String type;
   final String url;
+  /// Signed URL or path to poster image (often on VIDEO rows from S3).
+  final String? thumbnail;
   final String? provider;
   final String? mimeType;
   final int? duration;
   final int? order;
 
   factory LessonMedia.fromJson(Map<String, dynamic> j) {
+    final thumb = j['thumbnail']?.toString();
     return LessonMedia(
       id: (j['id'] as num?)?.toInt() ?? 0,
       lessonId: (j['lessonId'] as num?)?.toInt() ?? 0,
       type: j['type']?.toString() ?? '',
       url: j['url']?.toString() ?? '',
+      thumbnail: (thumb != null && thumb.trim().isNotEmpty) ? thumb.trim() : null,
       provider: j['provider']?.toString(),
       mimeType: j['mimeType']?.toString(),
       duration: (j['duration'] as num?)?.toInt(),
@@ -79,8 +84,14 @@ class BeltLesson {
     return null;
   }
 
-  /// Poster for list thumbnails: explicit image media, else YouTube still from first video URL.
+  /// Poster for list rows: API `media[].thumbnail` (e.g. S3), then image URL, then YouTube still.
   String? get thumbnailUrl {
+    for (final m in media) {
+      final thumb = m.thumbnail?.trim();
+      if (thumb != null && thumb.isNotEmpty) {
+        return _absoluteMedia(thumb);
+      }
+    }
     for (final m in media) {
       final t = m.type.toUpperCase();
       if ((t == 'IMAGE' || t == 'THUMBNAIL' || t == 'POSTER') &&

@@ -7,9 +7,6 @@ class HomePlanModulesController extends GetxController {
   HomePlanModulesController({PlanLevelService? planLevelService})
     : _service = planLevelService ?? PlanLevelService();
 
-  /// Set to `false` when the API returns real `isLocked` values.
-  static const bool ignoreServerLockForIntegration = true;
-
   final PlanLevelService _service;
 
   final selectedLevelIndex = 0.obs;
@@ -48,9 +45,8 @@ class HomePlanModulesController extends GetxController {
 
   String levelLabelForIndex(int index) => 'Level ${index + 1}';
 
-  /// Lock UI and purchase gate use this so integration can ignore stale `true` from API.
-  bool isBeltLocked(PlanLevelSection s) =>
-      ignoreServerLockForIntegration ? false : s.isLocked;
+  /// Lock / subscription UI follows API `isLocked` on each belt section.
+  bool isBeltLocked(PlanLevelSection s) => s.isLocked;
 
   @override
   void onInit() {

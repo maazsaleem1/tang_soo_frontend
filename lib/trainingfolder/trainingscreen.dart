@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:tang_soo_karate/controllers/training_progress_controller.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:tang_soo_karate/controllers/training_lessons_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
+import 'package:tang_soo_karate/homescreenfolder/level_one_screen.dart';
+import 'package:tang_soo_karate/models/user_training_lesson_model.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
 
 class Trainingscreen extends StatefulWidget {
@@ -20,52 +23,37 @@ class TrainingscreenState extends State<Trainingscreen> {
   static const Color _inactiveTabBg = Color(0xFFECECEC);
   static const Color _inactiveTabText = Color(0xFFBDBDBD);
 
-  late int _selectedFilter;
-
-  late final List<_TrainingLesson> _lessons = [
-    _TrainingLesson(
-      title: "Introduction Video",
-      completed: true,
-      bookmarked: false,
-    ),
-    _TrainingLesson(title: "Pyung Ahn", completed: true, bookmarked: true),
-    _TrainingLesson(
-      title: "Positive Mindset",
-      completed: false,
-      bookmarked: false,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
-    _selectedFilter = widget.initialFilter;
-    _hydrateFromProgress();
+    Get.put(
+      TrainingLessonsController(initialTabIndex: widget.initialFilter),
+    );
   }
 
-  void _hydrateFromProgress() {
-    if (!Get.isRegistered<TrainingProgressController>()) return;
-    final c = Get.find<TrainingProgressController>();
-    for (final l in _lessons) {
-      if (c.isTrainingTitleCompleted(l.title)) {
-        l.completed = true;
-      }
+  @override
+  void dispose() {
+    if (Get.isRegistered<TrainingLessonsController>()) {
+      Get.delete<TrainingLessonsController>();
     }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = Get.find<TrainingLessonsController>();
+
     return Scaffold(
       backgroundColor: AppColors.backgroundcolour,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: EdgeInsets.fromLTRB(12.w, 10.h, 12.w, 16.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _filterTabs(),
+              _filterTabs(ctrl),
               10.verticalSpace,
-              _buildFilteredLessonList(),
+              Expanded(child: _TrainingListBody(controller: ctrl)),
             ],
           ),
         ),
@@ -73,26 +61,37 @@ class TrainingscreenState extends State<Trainingscreen> {
     );
   }
 
-  Widget _filterTabs() {
-    final tabs = ["All", "Completed", "Bookmarked"];
+  Widget _filterTabs(TrainingLessonsController ctrl) {
+    const tabs = ['All', 'Completed', 'Bookmarked'];
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
-      child: Row(
-        children: [
-          for (var i = 0; i < tabs.length; i++) ...[
-            if (i > 0)
-              Container(width: 1, height: 28.h, color: const Color(0xFFE0E0E0)),
-            Expanded(child: _filterTabCell(i, tabs[i])),
+      child: Obx(() {
+        final selected = ctrl.selectedTab.value;
+        return Row(
+          children: [
+            for (var i = 0; i < tabs.length; i++) ...[
+              if (i > 0)
+                Container(
+                  width: 1,
+                  height: 28.h,
+                  color: const Color(0xFFE0E0E0),
+                ),
+              Expanded(child: _filterTabCell(ctrl, i, tabs[i], selected == i)),
+            ],
           ],
-        ],
-      ),
+        );
+      }),
     );
   }
 
-  Widget _filterTabCell(int index, String label) {
-    final selected = _selectedFilter == index;
+  Widget _filterTabCell(
+    TrainingLessonsController ctrl,
+    int index,
+    String label,
+    bool selected,
+  ) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedFilter = index),
+      onTap: () => ctrl.selectTab(index),
       child: Container(
         color: selected ? _selectedTabBg : _inactiveTabBg,
         child: Column(
@@ -117,97 +116,178 @@ class TrainingscreenState extends State<Trainingscreen> {
       ),
     );
   }
+}
 
-  Widget _buildFilteredLessonList() {
-    final visibleIndexes = <int>[];
-    for (var i = 0; i < _lessons.length; i++) {
-      if (_selectedFilter == 1 && !_lessons[i].completed) continue;
-      if (_selectedFilter == 2 && !_lessons[i].bookmarked) continue;
-      visibleIndexes.add(i);
+class _TrainingListBody extends StatelessWidget {
+  const _TrainingListBody({required this.controller});
+
+  final TrainingLessonsController controller;
+
+  String _emptyMessage(int tab) {
+    switch (tab) {
+      case 1:
+        return 'No completed lessons yet';
+      case 2:
+        return 'No bookmarked lessons yet';
+      default:
+        return 'No lessons yet';
     }
-
-    if (visibleIndexes.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 20.h),
-        alignment: Alignment.center,
-        child: styledText(
-          _selectedFilter == 2
-              ? "No bookmarked lessons yet"
-              : "No completed lessons yet",
-          TextType.font14500,
-          color: const Color(0xFF9B9B9B),
-        ),
-      );
-    }
-
-    return Column(
-      children: List.generate(visibleIndexes.length, (listIdx) {
-        final lessonIndex = visibleIndexes[listIdx];
-        final lesson = _lessons[lessonIndex];
-        return Padding(
-          padding: EdgeInsets.only(bottom: 10.h),
-          child: _lessonCard(
-            lessonIndex: lessonIndex,
-            title: lesson.title,
-            completed: lesson.completed,
-            showBookmark: lesson.bookmarked,
-          ),
-        );
-      }),
-    );
   }
 
-  Widget _lessonCard({
-    required int lessonIndex,
-    required String title,
-    required bool completed,
-    required bool showBookmark,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: const Color(0xFFE8E8E8)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      <Object?>[
+        controller.selectedTab.value,
+        controller.lessons.length,
+        controller.isLoading.value,
+        controller.isLoadingMore.value,
+        controller.errorMessage.value,
+        controller.hasNextPage.value,
+      ];
+      if (controller.isLoading.value && controller.lessons.isEmpty) {
+        return const _TrainingListShimmer();
+      }
+      if (controller.errorMessage.value != null &&
+          controller.lessons.isEmpty) {
+        return _TrainingErrorBlock(
+          message: controller.errorMessage.value ?? '',
+          onRetry: controller.retry,
+        );
+      }
+      if (controller.lessons.isEmpty) {
+        return Center(
+          child: styledText(
+            _emptyMessage(controller.selectedTab.value),
+            TextType.font14500,
+            color: const Color(0xFF9B9B9B),
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (showBookmark) ...[
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _lessons[lessonIndex].bookmarked =
-                      !_lessons[lessonIndex].bookmarked;
-                });
-              },
-              child: Icon(
-                Icons.bookmark_rounded,
-                size: 22.sp,
-                color: const Color(0xFF1F4F9A),
+        );
+      }
+
+      return ListView.builder(
+        padding: EdgeInsets.zero,
+        itemCount:
+            controller.lessons.length +
+            (controller.hasNextPage.value ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= controller.lessons.length) {
+            return Padding(
+              padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
+              child: Center(
+                child: controller.isLoadingMore.value
+                    ? SizedBox(
+                        width: 28.w,
+                        height: 28.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : TextButton(
+                        onPressed: controller.loadMore,
+                        child: styledText(
+                          'Load more',
+                          TextType.font14500,
+                          color: AppColors.buttoncolour,
+                        ),
+                      ),
               ),
+            );
+          }
+          final lesson = controller.lessons[index];
+          return Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: _TrainingLessonCard(
+              lesson: lesson,
+              isBookmarkedTab: controller.selectedTab.value == 2,
             ),
-            10.horizontalSpace,
-          ],
-          Expanded(
-            child: styledText(
-              title,
-              TextType.minifont16600hard,
-              color: const Color(0xFF333333),
-            ),
+          );
+        },
+      );
+    });
+  }
+}
+
+class _TrainingLessonCard extends StatelessWidget {
+  const _TrainingLessonCard({
+    required this.lesson,
+    this.isBookmarkedTab = false,
+  });
+
+  final UserTrainingLesson lesson;
+  /// Bookmarked filter tab: show bookmark on the right, not completion state.
+  final bool isBookmarkedTab;
+
+  static const Color _bookmarkBlue = Color(0xFF1F4F9A);
+
+  @override
+  Widget build(BuildContext context) {
+    final locked = lesson.isLocked;
+    final titleColor =
+        locked ? const Color(0xFF757575) : const Color(0xFF333333);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap:
+            locked
+                ? null
+                : () {
+                  Get.to(
+                    () => LevelOneScreen(
+                      beltId: lesson.navigationBeltId,
+                      beltTitle: lesson.title,
+                    ),
+                  );
+                },
+        borderRadius: BorderRadius.circular(12.r),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: const Color(0xFFE8E8E8)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          8.horizontalSpace,
-          _completionGlyph(completed: completed),
-        ],
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (!isBookmarkedTab && lesson.isBookmarked) ...[
+                Icon(
+                  Icons.bookmark_rounded,
+                  size: 22.sp,
+                  color: _bookmarkBlue,
+                ),
+                10.horizontalSpace,
+              ],
+              Expanded(
+                child: styledText(
+                  lesson.title,
+                  TextType.minifont16600hard,
+                  color: titleColor,
+                ),
+              ),
+              8.horizontalSpace,
+              if (isBookmarkedTab)
+                SizedBox(
+                  width: 28.w,
+                  height: 28.w,
+                  child: Icon(
+                    Icons.bookmark_rounded,
+                    color: _bookmarkBlue,
+                    size: 26.sp,
+                  ),
+                )
+              else
+                _completionGlyph(completed: lesson.isCompleted),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -246,14 +326,69 @@ class TrainingscreenState extends State<Trainingscreen> {
   }
 }
 
-class _TrainingLesson {
-  final String title;
-  bool completed;
-  bool bookmarked;
+class _TrainingListShimmer extends StatelessWidget {
+  const _TrainingListShimmer();
 
-  _TrainingLesson({
-    required this.title,
-    this.completed = false,
-    this.bookmarked = false,
-  });
+  static const _base = Color(0xFFE6E6E6);
+  static const _highlight = Color(0xFFF5F5F5);
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: _base,
+      highlightColor: _highlight,
+      period: const Duration(milliseconds: 1300),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: List.generate(
+          6,
+          (i) => Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Container(
+              height: 56.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrainingErrorBlock extends StatelessWidget {
+  const _TrainingErrorBlock({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              message.replaceFirst('Exception: ', ''),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13.sp, color: const Color(0xFF6E6E6E)),
+            ),
+            16.verticalSpace,
+            TextButton(
+              onPressed: onRetry,
+              child: styledText(
+                'Retry',
+                TextType.font14500,
+                color: AppColors.buttoncolour,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

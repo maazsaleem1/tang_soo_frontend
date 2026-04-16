@@ -2,24 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tang_soo_karate/controllers/training_progress_controller.dart';
 import 'package:tang_soo_karate/models/belt_lessons_model.dart';
+import 'package:tang_soo_karate/services/api/api_toast.dart';
 import 'package:tang_soo_karate/services/lessons/belt_lessons_service.dart';
+import 'package:tang_soo_karate/services/lessons/lesson_progress_service.dart';
 
 class BeltLessonsController extends GetxController {
   BeltLessonsController({
     required this.beltId,
     required String initialBeltTitle,
     BeltLessonsService? service,
-  }) : _service = service ?? BeltLessonsService() {
+    LessonProgressService? progressService,
+  }) : _service = service ?? BeltLessonsService(),
+       _progressService = progressService ?? LessonProgressService() {
     final t = initialBeltTitle.trim();
     beltName.value = t.isEmpty ? 'Lessons' : t;
   }
 
   final int beltId;
   final BeltLessonsService _service;
+  final LessonProgressService _progressService;
 
   final beltName = ''.obs;
   final lessons = <BeltLesson>[].obs;
   final isLoading = true.obs;
+  final isSubmittingComplete = false.obs;
+  final isSubmittingBookmark = false.obs;
   final errorMessage = RxnString();
   final searchQuery = ''.obs;
   final selectedLessonId = Rxn<int>();
@@ -34,9 +41,12 @@ class BeltLessonsController extends GetxController {
     load();
   }
 
-  Future<void> load() async {
-    isLoading.value = true;
-    errorMessage.value = null;
+  /// [silent] avoids full-screen shimmer (e.g. after marking a lesson complete).
+  Future<void> load({bool silent = false}) async {
+    if (!silent) {
+      isLoading.value = true;
+      errorMessage.value = null;
+    }
     try {
       final group = await _service.fetchBeltLessons(
         beltId: beltId,
@@ -53,12 +63,14 @@ class BeltLessonsController extends GetxController {
       } else {
         lessons.clear();
       }
+      errorMessage.value = null;
     } catch (e, st) {
       debugPrint('BeltLessonsController.load: $e\n$st');
+      if (silent) rethrow;
       errorMessage.value = e.toString();
       lessons.clear();
     } finally {
-      isLoading.value = false;
+      if (!silent) isLoading.value = false;
     }
   }
 
@@ -93,23 +105,59 @@ class BeltLessonsController extends GetxController {
 
   void closeDetail() => selectedLessonId.value = null;
 
-  void toggleBookmark(int lessonId) {
-    final l = lessonById(lessonId);
-    if (l == null) return;
-    _bookmarkOverride[lessonId] = !isBookmarked(l);
-    bookmarkRev.value++;
+  /// POST `bookmarked`, refresh belt lessons from API. Returns true on success.
+  Future<bool> submitBookmark(BeltLesson l, BuildContext? context) async {
+    if (isBookmarked(l)) return false;
+    isSubmittingBookmark.value = true;
+    try {
+      await _progressService.markLessonBookmarked(
+        lessonId: l.id,
+        context: context ?? Get.context,
+      );
+      await load(silent: true);
+      bookmarkRev.value++;
+      return true;
+    } catch (e, st) {
+      debugPrint('BeltLessonsController.submitBookmark: $e\n$st');
+      final msg =
+          e is Exception
+              ? e.toString().replaceFirst('Exception: ', '')
+              : e.toString();
+      AppErrorToast(title: msg).showToast(Get.context);
+      return false;
+    } finally {
+      isSubmittingBookmark.value = false;
+    }
   }
 
-  void markComplete(BeltLesson l) {
-    if (isCompleted(l)) return;
-    _extraCompletedIds.add(l.id);
-    completedRev.value++;
-    TrainingProgressController.ensureRegistered();
-    final idx = lessons.indexWhere((x) => x.id == l.id);
-    Get.find<TrainingProgressController>().completeLevelOneLesson(
-      idx < 0 ? 0 : idx,
-      l.title,
-    );
+  /// POST progress, then GET belt lessons so `isCompleted` / percent come from API.
+  Future<bool> markComplete(BeltLesson l, BuildContext? context) async {
+    if (isCompleted(l)) return false;
+    isSubmittingComplete.value = true;
+    try {
+      await _progressService.markLessonCompleted(
+        lessonId: l.id,
+        context: context ?? Get.context,
+      );
+      await load(silent: true);
+      TrainingProgressController.ensureRegistered();
+      final idx = lessons.indexWhere((x) => x.id == l.id);
+      Get.find<TrainingProgressController>().completeLevelOneLesson(
+        idx < 0 ? 0 : idx,
+        l.title,
+      );
+      return true;
+    } catch (e, st) {
+      debugPrint('BeltLessonsController.markComplete: $e\n$st');
+      final msg =
+          e is Exception
+              ? e.toString().replaceFirst('Exception: ', '')
+              : e.toString();
+      AppErrorToast(title: msg).showToast(Get.context);
+      return false;
+    } finally {
+      isSubmittingComplete.value = false;
+    }
   }
 
   Future<void> retry() => load();

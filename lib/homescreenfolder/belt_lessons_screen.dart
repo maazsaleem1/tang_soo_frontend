@@ -12,6 +12,7 @@ import 'package:tang_soo_karate/models/belt_lessons_model.dart';
 import 'package:tang_soo_karate/models/video_of_week_model.dart';
 import 'package:tang_soo_karate/navbarfolder/navbar_screen.dart';
 import 'package:tang_soo_karate/res/app_colours.dart';
+import 'package:tang_soo_karate/services/api/api_toast.dart';
 import 'package:tang_soo_karate/res/svgsicon.dart';
 
 String _stripHtml(String? raw) {
@@ -571,6 +572,8 @@ class _BeltLessonDetailView extends StatelessWidget {
       <Object?>[
         controller.bookmarkRev.value,
         controller.completedRev.value,
+        controller.isSubmittingComplete.value,
+        controller.isSubmittingBookmark.value,
       ];
       final lesson = controller.lessonById(lessonId);
       if (lesson == null) {
@@ -579,6 +582,8 @@ class _BeltLessonDetailView extends StatelessWidget {
       }
 
       final done = controller.isCompleted(lesson);
+      final submitting = controller.isSubmittingComplete.value;
+      final bookmarkSubmitting = controller.isSubmittingBookmark.value;
       final marked = controller.isBookmarked(lesson);
       final videoUrl = lesson.firstVideoUrl ?? '';
       final desc = _stripHtml(lesson.shortDescription ?? lesson.content);
@@ -658,6 +663,9 @@ class _BeltLessonDetailView extends StatelessWidget {
                                       showControls: true,
                                       allowFullScreen: true,
                                       fit: BoxFit.cover,
+                                      contentDurationHint: Duration(
+                                        seconds: lesson.durationSeconds,
+                                      ),
                                     ),
                           ),
                           Positioned(
@@ -668,16 +676,60 @@ class _BeltLessonDetailView extends StatelessWidget {
                               shape: const CircleBorder(),
                               child: InkWell(
                                 customBorder: const CircleBorder(),
-                                onTap: () => controller.toggleBookmark(lesson.id),
+                                onTap:
+                                    bookmarkSubmitting
+                                        ? null
+                                        : () async {
+                                          if (marked) {
+                                            Get.offAll(
+                                              () => const NavBarScreen(
+                                                initialIndex: 2,
+                                                initialTrainingFilter: 2,
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                          final ok =
+                                              await controller.submitBookmark(
+                                                lesson,
+                                                context,
+                                              );
+                                          if (!context.mounted) return;
+                                          if (ok) {
+                                            Get.offAll(
+                                              () => const NavBarScreen(
+                                                initialIndex: 2,
+                                                initialTrainingFilter: 2,
+                                              ),
+                                            );
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                              AppSuccessToast(
+                                                title:
+                                                    'You have bookmarked successfully.',
+                                              ).showToast(Get.context);
+                                            });
+                                          }
+                                        },
                                 child: Padding(
                                   padding: EdgeInsets.all(8.w),
-                                  child: Icon(
-                                    marked
-                                        ? Icons.bookmark_rounded
-                                        : Icons.bookmark_outline_rounded,
-                                    color: Colors.white,
-                                    size: 20.sp,
-                                  ),
+                                  child:
+                                      bookmarkSubmitting && !marked
+                                      ? SizedBox(
+                                          width: 20.sp,
+                                          height: 20.sp,
+                                          child: const CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Icon(
+                                          marked
+                                              ? Icons.bookmark_rounded
+                                              : Icons.bookmark_outline_rounded,
+                                          color: Colors.white,
+                                          size: 20.sp,
+                                        ),
                                 ),
                               ),
                             ),
@@ -701,16 +753,22 @@ class _BeltLessonDetailView extends StatelessWidget {
                     14.verticalSpace,
                     GestureDetector(
                       onTap:
-                          done
+                          done || submitting
                               ? null
-                              : () {
-                                controller.markComplete(lesson);
-                                Get.offAll(
-                                  () => const NavBarScreen(
-                                    initialIndex: 2,
-                                    initialTrainingFilter: 1,
-                                  ),
+                              : () async {
+                                final ok = await controller.markComplete(
+                                  lesson,
+                                  context,
                                 );
+                                if (!context.mounted) return;
+                                if (ok) {
+                                  Get.offAll(
+                                    () => const NavBarScreen(
+                                      initialIndex: 2,
+                                      initialTrainingFilter: 1,
+                                    ),
+                                  );
+                                }
                               },
                       child: Container(
                         width: double.infinity,
@@ -726,26 +784,38 @@ class _BeltLessonDetailView extends StatelessWidget {
                           children: [
                             Expanded(
                               child: styledText(
-                                done ? 'Completed' : 'Mark as Complete',
+                                submitting
+                                    ? 'Saving...'
+                                    : (done ? 'Completed' : 'Mark as Complete'),
                                 TextType.font15500,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                            Container(
-                              width: 20.w,
-                              height: 20.w,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
+                            if (submitting)
+                              SizedBox(
+                                width: 20.w,
+                                height: 20.w,
+                                child: const CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 20.w,
+                                height: 20.w,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  color: AppColors.buttoncolour,
+                                  size: 15.sp,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.check_rounded,
-                                color: AppColors.buttoncolour,
-                                size: 15.sp,
-                              ),
-                            ),
                           ],
                         ),
                       ),

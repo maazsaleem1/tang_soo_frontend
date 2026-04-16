@@ -37,6 +37,20 @@ class ApiConfig {
   /// Lessons for a belt, e.g. belt `1` → `/lessons/belt/1`.
   static String lessonsBelt(int beltId) => '/lessons/belt/$beltId';
 
+  /// User-scoped lessons: [filterType] is `all`, `isCompleted`, or `isBookmarked`.
+  /// GET `/lessons/user/{filterType}/filter?page=&limit=&search=`.
+  static String lessonsUserFilter(String filterType) =>
+      '/lessons/user/$filterType/filter';
+
+  /// POST body: `{ "lessonId": int, "status": "completed" }`.
+  static const String progressTrack = '/progress/track';
+
+  /// GET overall progress (current level, counts, current lesson).
+  static const String progressOverview = '/progress/overview';
+
+  /// Next lesson(s) after [lessonId], e.g. `5` → `/lessons/5/next`.
+  static String lessonNext(int lessonId) => '/lessons/$lessonId/next';
+
   /// Plan lessons preview, e.g. plan `1` → `/plans/1/level`.
   static String planLevel(int planId) => '/plans/$planId/level';
 
