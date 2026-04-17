@@ -34,6 +34,9 @@ class AuthController extends GetxController {
   final isLoginPasswordObscure = true.obs;
   final isSignupPasswordObscure = true.obs;
   final isSignupConfirmPasswordObscure = true.obs;
+  final isResetOldPasswordObscure = true.obs;
+  final isResetNewPasswordObscure = true.obs;
+  final isResetConfirmPasswordObscure = true.obs;
   final isVerifyOtpLoading = false.obs;
   final isResendOtpLoading = false.obs;
   final currentUser = Rxn<UserModel>();
@@ -47,6 +50,7 @@ class AuthController extends GetxController {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  String? _forgotPasswordOtpEmail;
 
   @override
   void onInit() {
@@ -93,6 +97,19 @@ class AuthController extends GetxController {
   void toggleSignupConfirmPasswordVisibility() {
     isSignupConfirmPasswordObscure.value =
         !isSignupConfirmPasswordObscure.value;
+  }
+
+  void toggleResetOldPasswordVisibility() {
+    isResetOldPasswordObscure.value = !isResetOldPasswordObscure.value;
+  }
+
+  void toggleResetNewPasswordVisibility() {
+    isResetNewPasswordObscure.value = !isResetNewPasswordObscure.value;
+  }
+
+  void toggleResetConfirmPasswordVisibility() {
+    isResetConfirmPasswordObscure.value =
+        !isResetConfirmPasswordObscure.value;
   }
 
   Future<void> signup() async {
@@ -214,7 +231,11 @@ class AuthController extends GetxController {
     resetConfirmPasswordController.clear();
   }
 
-  Future<bool> _verifyOtpRequest(String otp) async {
+  Future<bool> _verifyOtpRequest(
+    String otp, {
+    String? email,
+    bool sendHeaders = true,
+  }) async {
     if (otp.trim().length != 6) {
       Get.snackbar('Error', 'Please enter valid 6 digit OTP');
       return false;
@@ -224,7 +245,9 @@ class AuthController extends GetxController {
       isVerifyOtpLoading.value = true;
       final response = await _authService.verifyOtp(
         otp: otp.trim(),
+        email: email,
         context: Get.context,
+        sendHeaders: sendHeaders,
       );
 
       return response['success'] == true;
@@ -252,8 +275,13 @@ class AuthController extends GetxController {
   }
 
   Future<void> verifyForgotPasswordOtp(String otp) async {
-    final isSuccess = await _verifyOtpRequest(otp);
+    final isSuccess = await _verifyOtpRequest(
+      otp,
+      email: _forgotPasswordOtpEmail,
+      sendHeaders: true,
+    );
     if (isSuccess) {
+      _forgotPasswordOtpEmail = null;
       clearResetPasswordFields();
       Get.to(() => const ResetPasswordScreen());
     }
@@ -285,6 +313,7 @@ class AuthController extends GetxController {
       );
 
       if (response['success'] == true) {
+        _forgotPasswordOtpEmail = forgotPasswordEmailController.text.trim();
         forgotPasswordEmailController.clear();
         clearResetPasswordFields();
         Get.to(() => const VerifyOtpScreen(page: 'forgotpassword'));
@@ -364,10 +393,7 @@ class AuthController extends GetxController {
     var msg = 'Failed to change password';
     if (response is Map) {
       final m = Map<String, dynamic>.from(response);
-      msg =
-          m['message']?.toString() ??
-          m['error']?.toString() ??
-          msg;
+      msg = m['message']?.toString() ?? m['error']?.toString() ?? msg;
     }
     AppErrorToast(title: msg).showToast(Get.context);
   }

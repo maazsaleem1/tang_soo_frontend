@@ -3,6 +3,7 @@ import 'package:badges/badges.dart' as badges;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:tang_soo_karate/controllers/auth_controllers.dart';
 import 'package:tang_soo_karate/controllers/navbar_controller.dart';
 import 'package:tang_soo_karate/custom_widgets.dart/text_font_wise.dart';
 import 'package:tang_soo_karate/homescreenfolder/home_screen.dart';
@@ -47,6 +48,10 @@ class _NavBarScreenState extends State<NavBarScreen> {
       Profilescreen(),
     ];
     return Obx(() {
+      bottomController.count.value;
+      if (Get.isRegistered<AuthController>()) {
+        Get.find<AuthController>().currentUser.value;
+      }
       return Scaffold(
         resizeToAvoidBottomInset: true,
         extendBodyBehindAppBar: false,
@@ -62,7 +67,7 @@ class _NavBarScreenState extends State<NavBarScreen> {
     String title;
     switch (index) {
       case 0:
-        title = 'Welcome john';
+        title = _homeWelcomeTitle();
         break;
       case 1:
         title = 'Progress';
@@ -126,6 +131,13 @@ class _NavBarScreenState extends State<NavBarScreen> {
         ),
       ],
     );
+  }
+
+  String _homeWelcomeTitle() {
+    if (!Get.isRegistered<AuthController>()) return 'Welcome';
+    final u = Get.find<AuthController>().currentUser.value;
+    if (u == null) return 'Welcome';
+    return 'Welcome ${u.welcomeShortName}';
   }
 }
 

@@ -56,32 +56,45 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 textAlign: TextAlign.center,
               ),
               40.verticalSpace,
-              AppInput(
-                controller: authController.oldPasswordController,
-                validator: authController.validatePassword,
-                placeHolder: "Enter old password",
-                label: "Old Password",
-                obscureText: true,
-              ),
-              AppInput(
-                controller: authController.newPasswordController,
-                validator: authController.validatePassword,
-                placeHolder: "Enter new password",
-                label: "New Password",
-                obscureText: true,
-              ),
-              AppInput(
-                controller: authController.resetConfirmPasswordController,
-                validator:
-                    (value) => validate(
-                      value ?? '',
-                      'Confirm Password',
-                      password: authController.newPasswordController.text,
-                    ),
-                placeHolder: "Confirm new password",
-                label: "Confirm Password",
-                obscureText: true,
-              ),
+              Obx(() {
+                return AppInput(
+                  controller: authController.oldPasswordController,
+                  validator: authController.validatePassword,
+                  placeHolder: "Enter old password",
+                  label: "Old Password",
+                  obscureText: authController.isResetOldPasswordObscure.value,
+                  showPasswordIcon: true,
+                  onTap: authController.toggleResetOldPasswordVisibility,
+                );
+              }),
+              Obx(() {
+                return AppInput(
+                  controller: authController.newPasswordController,
+                  validator: authController.validatePassword,
+                  placeHolder: "Enter new password",
+                  label: "New Password",
+                  obscureText: authController.isResetNewPasswordObscure.value,
+                  showPasswordIcon: true,
+                  onTap: authController.toggleResetNewPasswordVisibility,
+                );
+              }),
+              Obx(() {
+                return AppInput(
+                  controller: authController.resetConfirmPasswordController,
+                  validator:
+                      (value) => validate(
+                        value ?? '',
+                        'Confirm Password',
+                        password: authController.newPasswordController.text,
+                      ),
+                  placeHolder: "Confirm new password",
+                  label: "Confirm Password",
+                  obscureText:
+                      authController.isResetConfirmPasswordObscure.value,
+                  showPasswordIcon: true,
+                  onTap: authController.toggleResetConfirmPasswordVisibility,
+                );
+              }),
               Obx(() {
                 return AppButton(
                   onPress: authController.resetPassword,

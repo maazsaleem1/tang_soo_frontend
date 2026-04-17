@@ -144,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Greeting is shown in the shell AppBar (NavBarScreen) using UserModel.welcomeShortName.
             // Row(
             //   children: [
             //     Container(
@@ -158,7 +159,11 @@ class _HomeScreenState extends State<HomeScreen> {
             //       ),
             //     ),
             //     10.horizontalSpace,
-            //     styledText("Welcome, John!", TextType.font14500),
+            //     Obx(() {
+            //       final u = Get.find<AuthController>().currentUser.value;
+            //       final n = u?.welcomeShortName ?? 'there';
+            //       return styledText('Welcome, $n!', TextType.font14500);
+            //     }),
             //     const Spacer(),
             //     GestureDetector(
             //       onTap: () {

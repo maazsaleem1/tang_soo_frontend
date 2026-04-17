@@ -106,4 +106,25 @@ class UserModel {
       'planId': planId,
     };
   }
+
+  /// Short name for greetings (e.g. app bar "Welcome …").
+  String get welcomeShortName {
+    String cap(String s) {
+      final t = s.trim();
+      if (t.isEmpty) return t;
+      if (t.length == 1) return t.toUpperCase();
+      return '${t[0].toUpperCase()}${t.substring(1).toLowerCase()}';
+    }
+
+    final first = firstName.trim();
+    if (first.isNotEmpty) return cap(first);
+    final full = fullName.trim();
+    if (full.isNotEmpty) {
+      final part = full.split(RegExp(r'\s+')).first;
+      return cap(part);
+    }
+    final emailPart = email.split('@').first.trim();
+    if (emailPart.isNotEmpty) return cap(emailPart);
+    return 'there';
+  }
 }

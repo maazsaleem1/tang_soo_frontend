@@ -12,6 +12,15 @@ class AuthService {
 
   final NetworkApiServices _apiService;
 
+  String? _extractTokenFromResponse(Map<String, dynamic> map) {
+    final root = map['token']?.toString().trim();
+    if (root != null && root.isNotEmpty) return root;
+    final data = (map['data'] as Map?)?.cast<String, dynamic>();
+    final nested = data?['token']?.toString().trim();
+    if (nested != null && nested.isNotEmpty) return nested;
+    return null;
+  }
+
   Future<void> _persistAuthData(Map<String, dynamic>? data) async {
     if (data == null) return;
 
@@ -114,17 +123,31 @@ class AuthService {
       context: context,
       body: {'email': email},
     );
-    return (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+    final parsed =
+        (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
+    final token = _extractTokenFromResponse(parsed);
+    if (token != null) {
+      await ApiStorage.setToken(token);
+    }
+    return parsed;
   }
 
   Future<Map<String, dynamic>> verifyOtp({
     required String otp,
+    String? email,
     BuildContext? context,
+    bool sendHeaders = true,
   }) async {
+    final body = <String, dynamic>{'otp': otp};
+    final trimmedEmail = email?.trim();
+    if (trimmedEmail != null && trimmedEmail.isNotEmpty) {
+      body['email'] = trimmedEmail;
+    }
     final response = await _apiService.postApi(
       url: ApiConfig.url(ApiConfig.verifyOtp),
       context: context,
-      body: {'otp': otp},
+      body: body,
+      sendHeaders: sendHeaders,
     );
     return (response as Map?)?.cast<String, dynamic>() ?? <String, dynamic>{};
   }
